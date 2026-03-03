@@ -34,7 +34,7 @@ php caracal serve
 # Getting Started with Caracal PHP
 
 This guide is designed to help you understand how to use Caracal PHP.
-For more usage details, please see [Full Documentation](./DOCS.MD).
+For more usage details, please see [Full Documentation](./DOCS.md).
 
 ---
 
