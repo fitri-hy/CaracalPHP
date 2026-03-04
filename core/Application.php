@@ -22,6 +22,9 @@ class Application
 
         $this->config = new Config();
 
+        $timezone = Helpers::env('APP_TIMEZONE', 'UTC');
+        date_default_timezone_set($timezone);
+
         $this->bootstrapServices();
 
         $this->plugin = new Plugin();
