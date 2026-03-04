@@ -147,5 +147,6 @@ php caracal cache:clear           # Clear cache
 │
 ├── caracal                       # CLI entrypoint
 ├── .env
+├── ws.php                        # WebSocket Server
 └── composer.json
 ```
