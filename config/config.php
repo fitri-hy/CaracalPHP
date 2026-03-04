@@ -39,4 +39,16 @@ return [
             'password' => $_ENV['REDIS_PASSWORD'] ?? null,
         ],
     ],
+
+    'ws' => [
+        'host'          => $_ENV['WS_HOST'] ?? '0.0.0.0',
+        'port'          => (int) ($_ENV['WS_PORT'] ?? 8080),
+        'logging'       => filter_var($_ENV['WS_LOGGING'] ?? false, FILTER_VALIDATE_BOOLEAN),
+        'use_ssl'       => filter_var($_ENV['WS_USE_SSL'] ?? false, FILTER_VALIDATE_BOOLEAN),
+        'cert_path'     => $_ENV['WS_CERT_PATH'] ?? null,
+        'key_path'      => $_ENV['WS_KEY_PATH'] ?? null,
+        'auth_enabled'  => filter_var($_ENV['WS_AUTH_ENABLED'] ?? false, FILTER_VALIDATE_BOOLEAN),
+        'auth_secret'   => $_ENV['WS_AUTH_SECRET'] ?? '',
+        'ping_interval' => (int) ($_ENV['WS_PING_INTERVAL'] ?? 30),
+    ],
 ];
