@@ -1,4 +1,4 @@
-# 📘 CaracalPHP – Mailer Documentation
+# 📘 CaracalPHP – Mailer: Cara Pakai
 
 Class:
 
@@ -6,154 +6,76 @@ Class:
 Caracal\Core\Mailer
 ```
 
-`Mailer` adalah wrapper sederhana untuk PHPMailer yang digunakan untuk mengirim email menggunakan SMTP berdasarkan konfigurasi aplikasi.
+Digunakan untuk mengirim email via SMTP berdasarkan konfigurasi di `.env` / Config.
 
 ---
 
-# 🎯 Tujuan Mailer
-
-* Mengirim email via SMTP
-* Menggunakan konfigurasi dari `Config`
-* Mendukung HTML dan plain text
-* Logging otomatis jika gagal
-
----
-
-# 1️⃣ Sumber Konfigurasi
-
-Semua konfigurasi diambil dari:
-
-```php
-Application::getInstance()->config()
-```
-
-Key config yang digunakan:
-
-| Key Config        | Fungsi         |
-| ----------------- | -------------- |
-| mail.host         | SMTP host      |
-| mail.user         | SMTP username  |
-| mail.pass         | SMTP password  |
-| mail.encryption   | tls / ssl      |
-| mail.port         | SMTP port      |
-| mail.from_address | Email pengirim |
-| mail.from_name    | Nama pengirim  |
-
----
-
-# 2️⃣ Constructor
-
-```php
-public function __construct()
-```
-
-Saat Mailer dibuat:
-
-1. Mengambil instance Config
-2. Mengaktifkan mode SMTP
-3. Mengatur kredensial SMTP
-4. Mengatur port dan encryption
-5. Mengatur default sender
-6. Set charset UTF-8
-
-Konfigurasi internal:
-
-```php
-$this->mailer->isSMTP();
-$this->mailer->SMTPAuth = true;
-$this->mailer->CharSet = 'UTF-8';
-```
-
----
-
-# 3️⃣ Method send()
-
-```php
-public function send(string $to, string $subject, string $body, bool $isHtml = true): bool
-```
-
-### Parameter
-
-| Parameter | Fungsi                 |
-| --------- | ---------------------- |
-| $to       | Email tujuan           |
-| $subject  | Subject email          |
-| $body     | Isi email              |
-| $isHtml   | Format HTML atau tidak |
-
-Return:
-
-* `true` → jika berhasil
-* `false` → jika gagal
-
----
-
-## Cara Kerja Internal
-
-Sebelum mengirim:
-
-```php
-$this->mailer->clearAllRecipients();
-$this->mailer->addAddress($to);
-$this->mailer->isHTML($isHtml);
-```
-
-Kemudian:
-
-```php
-$this->mailer->send();
-```
-
----
-
-# 4️⃣ Logging Jika Gagal
-
-Jika terjadi exception:
-
-```php
-(new Logger('mailer'))->error(...)
-```
-
-Log akan disimpan ke:
-
-```text
-/storage/logs/mailer.log
-```
-
-Context yang disimpan:
-
-* to
-* subject
-
----
-
-# 📌 Contoh Penggunaan
+## 1️⃣ Membuat Instance
 
 ```php
 use Caracal\Core\Mailer;
 
 $mailer = new Mailer();
+```
 
+Ini otomatis mengambil konfigurasi dari aplikasi (`mail.host`, `mail.user`, `mail.pass`, dll).
+
+---
+
+## 2️⃣ Mengirim Email HTML
+
+```php
 $success = $mailer->send(
-    'user@example.com',
-    'Welcome to CaracalPHP',
-    '<h1>Hello User</h1><p>Your account is ready.</p>'
+    'user@example.com',          // Email tujuan
+    'Welcome to CaracalPHP',     // Subject
+    '<h1>Hello User</h1><p>Your account is ready.</p>' // Isi email (HTML)
 );
 
-if (!$success) {
+if ($success) {
+    echo "Email berhasil dikirim.";
+} else {
     echo "Email gagal dikirim.";
 }
 ```
 
 ---
 
-# 📌 Mengirim Plain Text
+## 3️⃣ Mengirim Email Plain Text
 
 ```php
-$mailer->send(
+$success = $mailer->send(
     'user@example.com',
     'Plain Text Mail',
     'Ini adalah email text biasa.',
-    false
+    false  // false = plain text
 );
+```
+
+---
+
+## 4️⃣ Contoh di Controller
+
+Misal di controller:
+
+```php
+namespace App\Modules\Welcome\Controllers;
+
+use Caracal\Core\Controller;
+use Caracal\Core\Mailer;
+
+class WelcomeController extends Controller
+{
+    public function sendMail(): string
+    {
+        $mailer = new Mailer();
+
+        $success = $mailer->send(
+            'user@example.com',
+            'Welcome!',
+            '<h1>Selamat datang!</h1><p>Email ini dikirim dari CaracalPHP.</p>'
+        );
+
+        return $success ? 'Email berhasil dikirim' : 'Email gagal dikirim';
+    }
+}
 ```
