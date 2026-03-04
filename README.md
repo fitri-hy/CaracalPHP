@@ -43,6 +43,8 @@ For more usage details, please see [Full Documentation](./docs).
 ```bash
 php caracal serve                 # Start server
 php caracal serve --port=9000     # Change port
+php caracal server:ws             # Start WebSocket server (default port 8080)
+php caracal server:ws --port=3000 # Start WebSocket server di port custom
 php caracal app:run               # Run application lifecycle
 php caracal migrate               # Run all migrations
 php caracal migrate:rollback      # Rollback last migration
@@ -92,7 +94,7 @@ php caracal cache:clear           # Clear cache
 │   ├── Upload.php               # Upload file
 │   ├── Validation.php           # Data validation engine
 │   ├── View.php                 # Template rendering engine
-│   └── Watcher.php              # Hot Reload / Live Update
+│   └── WebSockets.php           # Websocket
 │
 ├── config/                      # Global & module configuration
 │   └── config.php               # Merge core & module configs
