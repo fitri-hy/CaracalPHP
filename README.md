@@ -89,8 +89,10 @@ php caracal cache:clear           # Clear cache
 │   ├── Sanitizer.php            # Input sanitization & XSS protection
 │   ├── Session.php              # Session management
 │   ├── Storage.php              # Private file storage abstraction
+│   ├── Upload.php               # Upload file
 │   ├── Validation.php           # Data validation engine
-│   └── View.php                 # Template rendering engine
+│   ├── View.php                 # Template rendering engine
+│   └── Watcher.php              # Hot Reload / Live Update
 │
 ├── config/                      # Global & module configuration
 │   └── config.php               # Merge core & module configs

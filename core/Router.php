@@ -138,7 +138,7 @@ class Router
 
         switch ($info[0]) {
             case Dispatcher::NOT_FOUND:
-                return new Response('404 Not Found', 404);
+                return ErrorHandler::notFound();
 
             case Dispatcher::METHOD_NOT_ALLOWED:
                 return new Response('405 Method Not Allowed', 405);
