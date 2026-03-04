@@ -14,7 +14,7 @@ class CSRF
 
     public function generate(): string
     {
-        $appKey = Helpers::env('APP_KEY', 'default_app_key');
+        $appKey = Helpers::env('APP_KEY');
         $random = random_bytes($this->length);
         $token = hash_hmac('sha256', $random, $appKey);
         $this->session->set($this->key, $token);

@@ -3,9 +3,6 @@ namespace Caracal\Core;
 
 use Throwable;
 
-/**
- * Base exception for Caracal framework
- */
 class CaracalException extends \Exception
 {
     protected array $context = [];
@@ -34,9 +31,6 @@ class CaracalException extends \Exception
     }
 }
 
-/**
- * Specific exceptions
- */
 class NotFoundException extends CaracalException {}
 class ValidationException extends CaracalException {}
 class CSRFException extends CaracalException {}

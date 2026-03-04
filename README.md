@@ -34,7 +34,25 @@ php caracal serve
 # Getting Started with Caracal PHP
 
 This guide is designed to help you understand how to use Caracal PHP.
-For more usage details, please see [Full Documentation](./DOCS.md).
+For more usage details, please see [Full Documentation](./docs).
+
+---
+
+## CLI
+
+```bash
+php caracal serve                 # Start server
+php caracal serve --port=9000     # Change port
+php caracal app:run               # Run application lifecycle
+php caracal migrate               # Run all migrations
+php caracal migrate:rollback      # Rollback last migration
+php caracal migrate:fresh         # Reset & migrate fresh
+php caracal db:seed               # Run all seeders
+php caracal db:seed UserSeeder    # Run a specific seeder
+php caracal migrate --seed        # Migrate & seed simultaneously
+php caracal cache:set --key=foo --value=bar --ttl=3600  # Set cache
+php caracal cache:clear           # Clear cache
+```
 
 ---
 
@@ -126,68 +144,4 @@ For more usage details, please see [Full Documentation](./DOCS.md).
 ├── caracal                       # CLI entrypoint
 ├── .env
 └── composer.json
-```
-
----
-
-## Composer Requirements
-
-```bash
-# Load environment variables (.env)
-composer require vlucas/phpdotenv
-
-# Database / ORM / query builder
-composer require illuminate/database
-
-# Logging engine
-composer require monolog/monolog
-
-# Data validation engine
-composer require respect/validation
-
-# Input sanitization / XSS protection
-composer require ezyang/htmlpurifier
-
-# CLI & background processes
-composer require symfony/process
-composer require symfony/console
-
-# Mailing engine
-composer require phpmailer/phpmailer
-
-# Optional routing engine replacement
-composer require nikic/fast-route
-
-# Redis driver (optional for Cache.php)
-composer require predis/predis
-
-# Unit & integration testing
-composer require --dev phpunit/phpunit
-
-# Debugging tools
-composer require --dev symfony/var-dumper
-
-# UUID generator
-composer require --dev ramsey/uuid
-
-# Date & time utilities
-composer require --dev nesbot/carbon
-```
-
----
-
-## CLI
-
-```bash
-php caracal serve                 # Start server
-php caracal serve --port=9000     # Change port
-php caracal app:run               # Run application lifecycle
-php caracal migrate               # Run all migrations
-php caracal migrate:rollback      # Rollback last migration
-php caracal migrate:fresh         # Reset & migrate fresh
-php caracal db:seed               # Run all seeders
-php caracal db:seed UserSeeder    # Run a specific seeder
-php caracal migrate --seed        # Migrate & seed simultaneously
-php caracal cache:set --key=foo --value=bar --ttl=3600  # Set cache
-php caracal cache:clear           # Clear cache
 ```
