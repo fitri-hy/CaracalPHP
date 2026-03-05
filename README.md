@@ -67,6 +67,7 @@ php caracal cache:clear           # Clear cache
 │   ├── Asset.php                # Public asset manager (CSS/JS/images)
 │   ├── Autoloader.php           # PSR-4 autoload for core & module classes
 │   ├── Cache.php                # Config, route, and view caching
+│   ├── CUID.php                 # Distributed ID generator
 │   ├── Config.php               # Load global & module configurations
 │   ├── Controller.php           # Base controller for modules
 │   ├── Cookie.php               # HTTP cookie management

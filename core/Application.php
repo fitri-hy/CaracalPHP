@@ -42,6 +42,10 @@ class Application
 
         $loader->addNamespace('Caracal\\Core', __DIR__);
         $loader->addNamespace('App\\Modules', $this->basePath . '/app/Modules');
+		
+		if (!class_exists('CUID')) {
+			class_alias(\Caracal\Core\CUID::class, 'CUID');
+		}	
     }
 
     protected function bootstrapServices(): void
