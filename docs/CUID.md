@@ -21,7 +21,7 @@ CUID bekerja dengan mekanisme berikut:
 1. Server dikonfigurasi dengan datacenter & worker ID
 2. CUID mengambil timestamp microsecond
 3. CUID menambahkan sequence anti-collision
-4. CUID menambahkan entropy random
+4. CUID menambahkan entropy random 4 byte
 5. Data dikemas menjadi 16 byte binary
 6. Binary diencode menjadi Base62 string
 ```
@@ -51,7 +51,6 @@ worker     (0–255)
 ```
 
 ⚠ Setiap server wajib memiliki kombinasi berbeda.
-
 Disarankan dipanggil di:
 
 * bootstrap file
@@ -120,7 +119,7 @@ true / false
 
 # 6. Decode ID
 
-## Decode dari String
+## Decode dari String (Base62)
 
 ```php
 $data = \CUID::decodeId($id);
@@ -159,23 +158,11 @@ Digunakan saat ID disimpan sebagai `BINARY(16)`.
 $timestamp = \CUID::timestampFromId($id);
 ```
 
-Timestamp dalam microsecond.
+Timestamp dikembalikan dalam **microsecond**.
 
 ---
 
-## Format Manual ke Datetime
-
-```php
-$seconds = intdiv($timestamp, 1000000);
-$micro   = $timestamp % 1000000;
-
-$datetime = date('Y-m-d H:i:s', $seconds)
-    . '.' . str_pad($micro, 6, '0', STR_PAD_LEFT);
-```
-
----
-
-## Shortcut Datetime (Binary Mode)
+## Format ke Datetime
 
 ```php
 $datetime = \CUID::datetime($binary);
@@ -220,7 +207,6 @@ $shard = \CUID::shard($id, 32);
 ```
 
 Artinya ID akan masuk shard 0–31.
-
 Cocok untuk:
 
 * Partitioned table
@@ -253,13 +239,13 @@ Output:
 Untuk mengukur performa generator:
 
 ```php
-echo \CUID::benchmark(3000);
+echo \CUID::benchmark(10000);
 ```
 
 Contoh:
 
 ```
-57.56 ms (3000 IDs)
+1.4 ms (1000 IDs)
 ```
 
 ---
@@ -316,10 +302,33 @@ id BINARY(16) PRIMARY KEY
 
 # 15. Ringkasan Penggunaan Dasar
 
-Untuk 90% kebutuhan aplikasi:
-
 ```php
-\CUID::configure(1, 9);
+// Konfigurasi node
+\CUID::configure(1, 42);
 
-$id = \CUID::id();
+// Generate 1 CUID
+\CUID::binary();
+\CUID::fromBinary($cuidBinary);
+
+// Decode
+\CUID::decode($cuidBinary);
+\CUID::decodeId($cuidId);
+
+// Timestamp & Datetime
+\CUID::timestampFromId($cuidId);
+\CUID::datetime($cuidBinary);
+
+// UUID format
+\CUID::uuid($cuidBinary);
+
+// Validasi & Shard 
+\CUID::isValid($cuidId);
+\CUID::shard($cuidId);
+
+// Node & Version
+\ CUID::node();
+\CUID::version();
+
+// Benchmark test ---
+\CUID::benchmark(1000);
 ```
