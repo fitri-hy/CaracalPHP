@@ -57,10 +57,14 @@ class Config
             'driver'     => $_ENV['DB_DRIVER'] ?? 'mysql',
             'host'       => $_ENV['DB_HOST'] ?? '127.0.0.1',
             'port'       => $_ENV['DB_PORT'] ?? 3306,
-            'database'   => $_ENV['DB_NAME'] ?? '',
-            'username'   => $_ENV['DB_USER'] ?? '',
-            'password'   => $_ENV['DB_PASS'] ?? '',
+            'name'       => $_ENV['DB_NAME'] ?? '',
+            'user'       => $_ENV['DB_USER'] ?? '',
+            'pass'       => $_ENV['DB_PASS'] ?? '',
+            'prefix'     => '',
+            'charset'    => 'utf8mb4',
+            'collation'  => 'utf8mb4_unicode_ci',
         ];
+
         $this->items['cache'] = [
             'enabled' => filter_var($_ENV['CACHE_ENABLED'] ?? false, FILTER_VALIDATE_BOOLEAN),
             'driver'  => $_ENV['CACHE_DRIVER'] ?? 'file',
