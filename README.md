@@ -54,6 +54,7 @@ php caracal db:seed UserSeeder    # Run a specific seeder
 php caracal migrate --seed        # Migrate & seed simultaneously
 php caracal cache:set --key=foo --value=bar --ttl=3600  # Set cache
 php caracal cache:clear           # Clear cache
+php caracal route:list            # Route list
 ```
 
 ---
