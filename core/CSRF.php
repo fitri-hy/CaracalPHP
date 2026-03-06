@@ -17,6 +17,7 @@ class CSRF
         $appKey = Helpers::env('APP_KEY');
         $random = random_bytes($this->length);
         $token = hash_hmac('sha256', $random, $appKey);
+
         $this->session->set($this->key, $token);
 
         return $token;
@@ -29,7 +30,7 @@ class CSRF
         $stored = $this->session->get($this->key);
         if (!$stored) return false;
 
-        $this->session->delete($this->key);
+        $this->session->remove($this->key);
 
         return hash_equals($stored, $token);
     }
