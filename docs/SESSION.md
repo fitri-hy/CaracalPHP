@@ -1,69 +1,129 @@
-# 📘 CaracalPHP – Session Documentation
+CaracalPHP – Session Documentation
 
 ## Overview
 
-`Caracal\Core\Session` adalah **engine session aman** untuk CaracalPHP yang mendukung:
+`Caracal\Core\Session` adalah **session engine aman dan fleksibel** untuk CaracalPHP.
 
-* Penyimpanan data session standar (`get`, `set`, `remove`)
-* **Flash data** (satu kali tampil)
-* **Regenerasi session ID** untuk keamanan
-* **Enkripsi & HMAC Signing** menggunakan `APP_KEY`
-* Multi-driver session:
+Session ini dirancang untuk:
 
-  * **File** (default, path: `storage/sessions`)
-  * **Redis** (menggunakan Predis)
-  * **Database** (tabel `sessions` otomatis dibuat jika belum ada)
+* Aman untuk production
+* Mendukung **multi-driver storage**
+* Menggunakan **enkripsi AES-256**
+* Mendukung **flash message**
+* Mendukung **lazy session start** (session hanya dibuat saat dipakai)
 
-> 🔐 Semua data session dienkripsi dengan AES-256-CBC, sehingga tidak bisa dimanipulasi.
+Semua data session disimpan dalam kondisi **terenkripsi dan HMAC-signed**, sehingga tidak dapat dimanipulasi.
 
 ---
 
-## Initialization
+# Features
 
-Session otomatis diinisialisasi saat memanggil class `Session`.
-Driver dan lifetime mengikuti ENV:
+| Feature              | Status |
+| -------------------- | ------ |
+| AES-256 Encryption   | ✅      |
+| HMAC Data Integrity  | ✅      |
+| Flash Message        | ✅      |
+| Lazy Session Start   | ✅      |
+| Redis Driver         | ✅      |
+| Database Driver      | ✅      |
+| Secure Cookie        | ✅      |
+| Session Regeneration | ✅      |
+
+---
+
+# Supported Drivers
+
+Session dapat menggunakan beberapa storage backend.
+
+| Driver     | Description                             |
+| ---------- | --------------------------------------- |
+| `file`     | Default, disimpan di `storage/sessions` |
+| `redis`    | Disimpan di Redis server                |
+| `database` | Disimpan di tabel `sessions`            |
+
+---
+
+# Configuration (.env)
 
 ```dotenv
-SESSION_DRIVER=file        # file / redis / database
-SESSION_LIFETIME=120       # dalam detik
-APP_KEY=JFayvQsRn8xQVCcv0kjav3A23p3yzFgHzIl7+pTvuEw=
+SESSION_DRIVER=file
+SESSION_LIFETIME=7200
+SESSION_COOKIE=caracal_session
+
+APP_KEY=your-secret-key
 ```
+
+Penjelasan:
+
+| Variable         | Description                  |
+| ---------------- | ---------------------------- |
+| SESSION_DRIVER   | file / redis / database      |
+| SESSION_LIFETIME | lifetime session dalam detik |
+| SESSION_COOKIE   | nama cookie session          |
+| APP_KEY          | key enkripsi session         |
+
+---
+
+# Initialization
+
+Session otomatis diinisialisasi saat class dipanggil.
 
 ```php
 use Caracal\Core\Session;
 
-// Otomatis membaca ENV
 $session = new Session();
 ```
 
-> Tidak perlu `session_start()`, class Session akan menanganinya.
+⚠ Tidak perlu memanggil `session_start()`.
+
+Session menggunakan **lazy start**, artinya session baru dimulai ketika:
+
+```
+set()
+get()
+flash()
+id()
+```
+
+dipanggil.
 
 ---
 
-## Basic Usage
+# Basic Usage
 
-### Set & Get Data
+## Set Session Data
 
 ```php
 $session->set('user_id', 123);
-$userId = $session->get('user_id'); // 123
 ```
 
-Jika key tidak ada, bisa pakai default value:
+---
+
+## Get Session Data
 
 ```php
-$role = $session->get('role', 'guest'); // 'guest' jika tidak ada
+$userId = $session->get('user_id');
 ```
 
-### Check Existence
+Dengan default value:
+
+```php
+$role = $session->get('role', 'guest');
+```
+
+---
+
+## Check Session Key
 
 ```php
 if ($session->has('user_id')) {
-    echo "User is logged in";
+    echo "User logged in";
 }
 ```
 
-### Remove Data
+---
+
+## Remove Session Data
 
 ```php
 $session->remove('user_id');
@@ -71,119 +131,305 @@ $session->remove('user_id');
 
 ---
 
-## Flash Data
+# Flash Message
 
-Flash data adalah data **satu kali tampil**, biasanya untuk notifikasi atau pesan sukses/error.
+Flash data adalah data yang hanya tersedia **untuk request berikutnya**.
+
+Biasanya digunakan untuk:
+
+* notifikasi sukses
+* pesan error
+* alert UI
+
+---
+
+## Set Flash
 
 ```php
-// Set flash
 $session->flash('success', 'Data saved successfully');
-
-// Get flash
-$message = $session->flash('success'); // 'Data saved successfully'
-
-// Flash otomatis hilang setelah dibaca
-$session->flash('success'); // null
 ```
 
 ---
 
-## Session ID & Regeneration
-
-Regenerasi session ID penting untuk mencegah **session fixation attack**.
+## Get Flash
 
 ```php
-// Ambil session ID saat ini
-$id = $session->id();
+$message = $session->flash('success');
+```
 
-// Regenerate session ID
+Setelah dibaca, flash akan otomatis dihapus.
+
+Lifecycle flash:
+
+```
+Request 1 -> set flash
+Request 2 -> flash tersedia
+Request 3 -> flash hilang
+```
+
+---
+
+# Session ID
+
+Ambil session ID aktif:
+
+```php
+$id = $session->id();
+```
+
+---
+
+# Regenerate Session ID
+
+Digunakan untuk mencegah **session fixation attack**.
+
+Contoh saat login:
+
+```php
 $session->regenerate();
 ```
 
 ---
 
-## Retrieve All Session Data
+# Retrieve All Session Data
 
 ```php
 $data = $session->all();
-// Mengembalikan array semua session kecuali flash, semua sudah didekripsi
 ```
+
+Return:
+
+```
+array semua session (flash tidak disertakan)
+```
+
+Semua data otomatis **didekripsi**.
 
 ---
 
-## Clear Session
+# Clear Session
 
-Menghapus seluruh session, termasuk cookie dan Redis/DB jika digunakan:
+Menghapus seluruh session:
 
 ```php
 $session->clear();
 ```
 
-> Setelah clear, session harus dibuat ulang jika ingin dipakai lagi.
+Ini akan:
+
+* menghapus data session
+* menghancurkan session ID
+* menghapus cookie session
 
 ---
 
-## Security Features
+# Encryption
 
-1. **Encryption**
+Semua session data menggunakan:
 
-   * Menggunakan **AES-256-CBC**
-   * Key diambil dari `APP_KEY` di `.env`
-   * Semua session dienkripsi sehingga data aman di server
+```
+AES-256-CBC encryption
+HMAC-SHA256 signing
+```
 
-2. **HMAC Signing**
+Struktur payload:
 
-   * Memastikan data session **tidak dimanipulasi**
-   * Jika integritas gagal, `get()` mengembalikan default
+```
+base64(
+   IV
+   HMAC
+   CIPHERTEXT
+)
+```
 
-3. **Flash Data Aman**
+Keuntungan:
 
-   * Flash data juga terenkripsi dan HMAC-signed
+* data tidak bisa dibaca langsung
+* data tidak bisa dimodifikasi
+* integritas payload terjamin
+
+Jika payload rusak:
+
+```
+get() akan mengembalikan default value
+```
 
 ---
 
-## Supported Drivers
+# Redis Session Driver
 
-| Driver   | Description                                     | Config via ENV          |
-| -------- | ----------------------------------------------- | ----------------------- |
-| file     | Default, menggunakan `storage/sessions`         | SESSION_DRIVER=file     |
-| redis    | Menggunakan Predis, tersambung ke Redis server  | SESSION_DRIVER=redis    |
-| database | Tersimpan di tabel `sessions` (otomatis dibuat) | SESSION_DRIVER=database |
+Jika menggunakan Redis:
 
-> Lifetime mengikuti `SESSION_LIFETIME` (detik)
+```dotenv
+SESSION_DRIVER=redis
+```
+
+Session disimpan dengan format key:
+
+```
+caracal_session:{session_id}
+```
+
+Contoh:
+
+```
+caracal_session:2f1d8a73a9e5c1
+```
+
+⚠ Redis tidak menggunakan `flushdb()`, sehingga aman untuk multi aplikasi.
 
 ---
 
-## Example: Login & Flash Message
+# Database Session Driver
+
+Jika menggunakan database:
+
+```dotenv
+SESSION_DRIVER=database
+```
+
+Caracal akan otomatis membuat tabel:
+
+```sql
+sessions
+```
+
+Schema:
+
+```sql
+id VARCHAR PRIMARY KEY
+payload TEXT
+expires INT
+```
+
+Session akan otomatis dihapus oleh **garbage collector** saat expired.
+
+---
+
+# File Session Driver
+
+Default driver.
+
+Lokasi penyimpanan:
+
+```
+storage/sessions
+```
+
+Setiap session disimpan sebagai file.
+
+Cocok untuk:
+
+* development
+* small applications
+* single server deployment
+
+---
+
+# Security
+
+Caracal Session memiliki beberapa fitur keamanan:
+
+### Encryption
+
+Semua data session terenkripsi menggunakan:
+
+```
+AES-256-CBC
+```
+
+---
+
+### HMAC Verification
+
+Payload ditandatangani menggunakan:
+
+```
+HMAC-SHA256
+```
+
+Jika payload dimodifikasi:
+
+```
+decrypt() akan gagal
+```
+
+---
+
+### Secure Cookie
+
+Session cookie menggunakan default:
+
+```
+HttpOnly
+SameSite=Lax
+Secure (HTTPS)
+```
+
+Sehingga:
+
+* tidak bisa diakses JavaScript
+* terlindung dari CSRF sebagian
+* aman di HTTPS
+
+---
+
+# Example: Login Flow
 
 ```php
 $session = new \Caracal\Core\Session();
 
-// Login
+// set user session
 $session->set('user_id', $user->id);
 $session->set('role', $user->role);
 
-// Set flash message
+// regenerate ID
+$session->regenerate();
+
+// set flash message
 $session->flash('success', 'Welcome back!');
 
-// Redirect user
 header('Location: /dashboard');
 exit;
+```
 
-// In dashboard page
-$flash = $session->flash('success');
-if ($flash) {
-    echo "<div class='alert alert-success'>$flash</div>";
+Di halaman dashboard:
+
+```php
+$session = new Session();
+
+if ($msg = $session->flash('success')) {
+    echo "<div class='alert'>$msg</div>";
 }
 ```
 
 ---
 
-## Notes
+# Best Practice
 
-* Default **storage path**: `storage/sessions`
-* Default **cookie settings**: `HttpOnly`, `SameSite=Lax`
-* Lifetime default: 2 jam (`7200 detik`) jika ENV tidak diatur
-* Flash data **otomatis hilang** setelah dibaca
-* Driver **Redis** dan **Database** siap pakai
-* Tidak ada dependency lain selain `APP_KEY` untuk enkripsi
+Gunakan session untuk:
+
+* authentication state
+* flash message
+* CSRF token
+* user preference
+
+Jangan gunakan session untuk:
+
+* menyimpan file besar
+* menyimpan data sensitif tanpa enkripsi tambahan
+* menyimpan cache
+
+---
+
+# Summary
+
+| Capability           | Supported |
+| -------------------- | --------- |
+| Multi Driver Session | ✅         |
+| Encryption           | ✅         |
+| Flash Message        | ✅         |
+| Redis Support        | ✅         |
+| Database Session     | ✅         |
+| Lazy Start           | ✅         |
+| Secure Cookies       | ✅         |

@@ -1,181 +1,171 @@
-# 📘 CaracalPHP – Cookie Usage Documentation
+# CaracalPHP – Cookie Usage Documentation
 
 Class:
 
-```php
+```
 Caracal\Core\Cookie
 ```
 
-Class ini menyediakan static method untuk:
+Cookie menyediakan utilitas untuk mengelola HTTP cookie dalam aplikasi Caracal.
 
-* Membuat cookie
-* Membaca cookie
-* Menghapus cookie
-* Mengecek keberadaan cookie
-* Menghapus semua cookie
-
-Semua method bersifat **static**, sehingga tidak perlu membuat instance.
+Semua method bersifat **static**.
 
 ---
 
-# 1️⃣ Membuat Cookie
+# Membuat Cookie
 
 Gunakan method:
 
-```php
-Cookie::set(
+```
+Cookie::set()
+```
+
+Signature:
+
+```
+set(
     string $name,
     mixed $value,
     int $minutes = 60,
     string $path = '/',
     string $domain = '',
-    bool $secure = false,
-    bool $httponly = true
-): void
+    bool $secure = null,
+    bool $httponly = true,
+    string $samesite = 'Lax'
+)
 ```
 
 ---
 
-## Contoh Dasar
+# Contoh Dasar
 
-```php
-use Caracal\Core\Cookie;
-
+```
 Cookie::set('username', 'john', 120);
 ```
 
-Cookie akan aktif selama 120 menit.
+Cookie berlaku selama **120 menit**.
 
 ---
 
-## Menyimpan Array atau Object
+# Menyimpan Array / Object
 
-Jika value berupa array atau object, otomatis akan di-serialize:
-
-```php
-Cookie::set('user_data', [
+```
+Cookie::set('user', [
     'id' => 1,
     'name' => 'John'
-], 60);
+]);
 ```
+
+Data akan otomatis disimpan sebagai **JSON**.
 
 ---
 
-## Opsi Tambahan
+# Cookie Permanen
 
-```php
-Cookie::set(
-    'token',
-    'abc123',
-    30,
-    '/',
-    '',
-    true,   // secure
-    true    // httponly
-);
+```
+Cookie::forever('remember_token', 'abc123');
 ```
 
-Parameter:
-
-| Parameter   | Fungsi                             |
-| ----------- | ---------------------------------- |
-| `$minutes`  | Durasi cookie dalam menit          |
-| `$path`     | Path akses cookie                  |
-| `$domain`   | Domain cookie (default: HTTP_HOST) |
-| `$secure`   | Hanya dikirim via HTTPS            |
-| `$httponly` | Tidak bisa diakses via JavaScript  |
-| `samesite`  | Default: `Lax` (otomatis)          |
+Cookie berlaku sekitar **5 tahun**.
 
 ---
 
-# 2️⃣ Mengambil Cookie
+# Mengambil Cookie
 
-Gunakan:
-
-```php
-Cookie::get(string $name, mixed $default = null): mixed
+```
+Cookie::get(string $name, mixed $default = null)
 ```
 
----
+Contoh:
 
-## Contoh
-
-```php
+```
 $username = Cookie::get('username');
 ```
 
-Jika cookie tidak ada:
+Dengan default:
 
-```php
+```
 $username = Cookie::get('username', 'guest');
 ```
 
 ---
 
-## Otomatis Unserialize
+# Pull Cookie
 
-Jika cookie sebelumnya disimpan sebagai array/object,
-maka akan otomatis di-unserialize:
+Mengambil cookie lalu langsung menghapusnya.
 
-```php
-$user = Cookie::get('user_data');
-
-echo $user['name'];
+```
+$token = Cookie::pull('login_token');
 ```
 
 ---
 
-# 3️⃣ Mengecek Apakah Cookie Ada
+# Mengecek Cookie
 
-```php
+```
 Cookie::has('username');
 ```
 
-Mengembalikan:
+Return:
 
-```php
-true atau false
+```
+true / false
 ```
 
 ---
 
-# 4️⃣ Menghapus Cookie
+# Menghapus Cookie
 
-Gunakan:
-
-```php
-Cookie::delete(string $name, string $path = '/', string $domain = '')
 ```
-
-Contoh:
-
-```php
 Cookie::delete('username');
 ```
 
-Cookie akan dihapus dengan:
+Cookie akan:
 
-* Expired time di-set ke masa lalu
-* Otomatis di-unset dari `$_COOKIE`
+* expired
+* dihapus dari `$_COOKIE`
 
 ---
 
-# 5️⃣ Menghapus Semua Cookie
+# Menghapus Semua Cookie
 
-```php
+```
 Cookie::clearAll();
 ```
 
-Method ini akan:
-
-* Loop seluruh `$_COOKIE`
-* Menghapus satu per satu menggunakan `delete()`
+Semua cookie akan dihapus.
 
 ---
 
-# 6️⃣ Contoh Penggunaan di Controller
+# Mengambil Semua Cookie
 
-```php
+```
+$cookies = Cookie::all();
+```
+
+---
+
+# Default Security
+
+Secara default cookie memiliki:
+
+```
+SameSite = Lax
+HttpOnly = true
+Secure   = auto jika HTTPS
+```
+
+Ini membantu melindungi dari:
+
+* CSRF
+* XSS
+* cookie leakage
+
+---
+
+# Contoh Penggunaan di Controller
+
+```
 use Caracal\Core\Controller;
 use Caracal\Core\Cookie;
 
@@ -185,40 +175,28 @@ class AuthController extends Controller
     {
         Cookie::set('user', 'john', 60);
 
-        return $this->render('dashboard.view');
+        return $this->view('dashboard.view');
     }
 
     public function logout()
     {
         Cookie::delete('user');
 
-        return $this->render('login.view');
+        return $this->view('login.view');
     }
 }
 ```
 
 ---
 
-# 7️⃣ Perilaku Internal Penting
+# Ringkasan Method
 
-### ✔ Array/Object otomatis di-serialize
-
-### ✔ Saat `get()`, otomatis mencoba `unserialize()`
-
-### ✔ `samesite` default adalah `'Lax'`
-
-### ✔ Domain default menggunakan `$_SERVER['HTTP_HOST']`
-
-### ✔ Cookie langsung tersedia di `$_COOKIE` setelah `set()`
-
----
-
-# 📌 Ringkasan Method
-
-| Method     | Fungsi                     |
-| ---------- | -------------------------- |
-| set()      | Membuat cookie             |
-| get()      | Mengambil cookie           |
-| delete()   | Menghapus cookie           |
-| has()      | Mengecek keberadaan cookie |
-| clearAll() | Menghapus semua cookie     |
+Method | Fungsi
+set() | membuat cookie
+get() | membaca cookie
+pull() | membaca lalu menghapus cookie
+forever() | cookie jangka sangat panjang
+has() | mengecek cookie
+delete() | menghapus cookie
+clearAll() | menghapus semua cookie
+all() | mengambil semua cookie

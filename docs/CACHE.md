@@ -1,22 +1,4 @@
-# 📘 CaracalPHP Cache Usage Guide
-
-Dokumentasi ini menjelaskan cara menggunakan `Caracal\Core\Cache` di dalam:
-
-* Controller
-* Service
-* Middleware
-* View
-
-Tanpa melakukan perubahan pada file:
-
-```id="structure"
-core/Cache.php
-core/Helpers.php
-```
-
----
-
-# 📦 1. Konsep Dasar Cache
+# CaracalPHP Cache Usage Guide
 
 Class:
 
@@ -24,303 +6,156 @@ Class:
 Caracal\Core\Cache
 ```
 
-Menyediakan method:
+Cache menyediakan sistem penyimpanan sementara untuk meningkatkan performa aplikasi dengan menyimpan data yang sering diakses.
 
-```php
-set(string $key, mixed $value, int $ttl = null): void
-get(string $key, mixed $default = null): mixed
-delete(string $key): void
-clearAll(): void
-getDefaultTTL(): int
+Cache mendukung dua driver:
+
+* file
+* redis
+
+Driver dapat dikonfigurasi melalui environment.
+
+---
+
+## Konfigurasi
+
+Pengaturan cache melalui `.env` atau config:
+
 ```
-
-Cache driver:
-
-* `file` (default)
-* `redis` (jika tersedia & dikonfigurasi)
-
-Pengaturan melalui `.env` / config:
-
-```env
 CACHE_ENABLED=true
 CACHE_DRIVER=file
 CACHE_TTL=3600
+CACHE_PREFIX=caracal:
 ```
 
-Jika `CACHE_ENABLED=false`, maka semua operasi cache akan otomatis nonaktif.
+Jika `CACHE_ENABLED=false`, semua operasi cache akan dilewati.
 
 ---
 
-# 🧩 2. Penggunaan di Controller
+## Method Utama
 
-Lokasi:
+Cache menyediakan method berikut:
 
-```id="controller-path"
-app/Modules/{ModuleName}/Controllers/
 ```
-
-Contoh:
-
-```php
-<?php
-
-namespace App\Modules\Home\Controllers;
-
-use Caracal\Core\Controller;
-use Caracal\Core\Cache;
-use App\Modules\Home\Models\HomeModel;
-
-class HomeController extends Controller
-{
-    public function index()
-    {
-        $cache = new Cache();
-
-        $posts = $cache->get('home.posts');
-
-        if ($posts === null) {
-            $posts = (new HomeModel())->getAllPosts();
-            $cache->set('home.posts', $posts, 600); // 10 menit
-        }
-
-        return $this->view('home.view', compact('posts'));
-    }
-}
+set(string $key, mixed $value, int $ttl = null)
+get(string $key, mixed $default = null)
+has(string $key)
+delete(string $key)
+remember(string $key, callable $callback, int $ttl = null)
+clearAll()
+getDefaultTTL()
 ```
-
-📌 Cocok untuk:
-
-* Query database berat
-* API call eksternal
-* Data homepage
 
 ---
 
-# 🧠 3. Penggunaan di Service Layer (Direkomendasikan)
+## Menyimpan Cache
 
-Lokasi:
-
-```id="service-path"
-app/Modules/{ModuleName}/Services/
+```
+$cache->set('home.posts', $posts, 600);
 ```
 
-Contoh:
-
-```php
-<?php
-
-namespace App\Modules\Home\Services;
-
-use Caracal\Core\Cache;
-use App\Modules\Home\Models\HomeModel;
-
-class HomeService
-{
-    public function getPosts()
-    {
-        $cache = new Cache();
-
-        $posts = $cache->get('home.posts');
-
-        if ($posts === null) {
-            $posts = (new HomeModel())->getAllPosts();
-            $cache->set('home.posts', $posts, 600);
-        }
-
-        return $posts;
-    }
-}
-```
-
-Controller menjadi lebih bersih:
-
-```php
-public function index()
-{
-    $service = new HomeService();
-    $posts = $service->getPosts();
-
-    return $this->view('home.view', compact('posts'));
-}
-```
-
-📌 Best practice: letakkan cache logic di Service, bukan di Controller.
+TTL dalam detik.
 
 ---
 
-# 🌍 4. Full Page Cache via Middleware
+## Mengambil Cache
 
-Lokasi:
-
-```id="middleware-path"
-app/Modules/{ModuleName}/Middleware/
+```
+$posts = $cache->get('home.posts');
 ```
 
-Contoh middleware:
-
-```php
-<?php
-
-namespace App\Modules\Home\Middleware;
-
-use Caracal\Core\Cache;
-
-class HomeCacheMiddleware
-{
-    public function handle($request, $next)
-    {
-        $cache = new Cache();
-
-        $key = 'page_' . md5($request->getUri());
-
-        $cached = $cache->get($key);
-
-        if ($cached !== null) {
-            echo $cached;
-            return;
-        }
-
-        ob_start();
-        $response = $next($request);
-        $content = ob_get_clean();
-
-        $cache->set($key, $content, 300);
-
-        echo $content;
-    }
-}
-```
-
-📌 Cocok untuk:
-
-* Landing page
-* Static content
-* Halaman publik
+Jika cache tidak ada, return `null`.
 
 ---
 
-# 🧱 5. Fragment Cache di View
+## Mengecek Cache
 
-Lokasi:
-
-```id="view-path"
-app/Modules/{ModuleName}/Views/
 ```
-
-Contoh:
-
-```php
-<?php
-use Caracal\Core\Cache;
-
-$cache = new Cache();
-
-$sidebar = $cache->get('home.sidebar');
-
-if ($sidebar === null) {
-    ob_start();
-?>
-    <div class="sidebar">
-        Konten berat disini...
-    </div>
-<?php
-    $sidebar = ob_get_clean();
-    $cache->set('home.sidebar', $sidebar, 600);
+if ($cache->has('home.posts')) {
 }
-
-echo $sidebar;
-?>
 ```
-
-📌 Cocok untuk:
-
-* Sidebar
-* Widget
-* Menu dinamis
-* Partial template berat
 
 ---
 
-# 🗑 6. Menghapus Cache
+## remember()
 
-Menghapus cache tertentu:
+Method ini adalah cara paling efisien menggunakan cache.
 
-```php
-$cache = new Cache();
+```
+$posts = $cache->remember('home.posts', function() {
+    return (new HomeModel())->getAllPosts();
+}, 600);
+```
+
+Jika cache tersedia, callback tidak akan dijalankan.
+
+---
+
+## Menghapus Cache
+
+```
 $cache->delete('home.posts');
 ```
 
-Menghapus semua cache:
+---
 
-```php
+## Menghapus Semua Cache
+
+```
 $cache->clearAll();
 ```
 
 ---
 
-# 🔑 7. Best Practice Penamaan Key
+## File Cache Storage
 
-Gunakan pola konsisten:
-
-```
-module.entity.action
-```
-
-Contoh:
+Jika menggunakan driver `file`, cache disimpan di:
 
 ```
-home.posts
-home.sidebar
-user.profile.12
-page.home
-page.about
-```
-
-Untuk halaman dinamis:
-
-```php
-$key = 'page_' . md5($request->getUri());
-```
-
----
-
-# ⚙️ 8. Cara Kerja Internal
-
-Jika driver:
-
-### File
-
-Disimpan di:
-
-```id="storage-path"
 storage/cache/
 ```
 
 Format file:
 
 ```
-{key}.cache
+{hash}.cache
 ```
 
-### Redis
+---
 
-Menggunakan:
+## Redis Cache
+
+Jika driver `redis` aktif, cache disimpan di Redis menggunakan:
 
 ```
 setex(key, ttl, serialized_value)
 ```
 
-Jika Redis gagal, otomatis fallback ke file.
+Jika Redis tidak tersedia, sistem otomatis fallback ke file cache.
 
 ---
 
-# 📌 Ringkasan
+## Best Practice
 
-| Lokasi     | Tujuan                             |
-| ---------- | ---------------------------------- |
-| Controller | Cache data endpoint                |
-| Service    | Cache business logic (recommended) |
-| Middleware | Full page caching                  |
-| View       | Fragment caching                   |
-| delete()   | Hapus cache tertentu               |
-| clearAll() | Bersihkan semua cache              |
+Gunakan pola penamaan key yang konsisten.
+
+Contoh:
+
+```
+module.entity.action
+```
+
+Contoh nyata:
+
+```
+home.posts
+home.sidebar
+user.profile.12
+page.home
+```
+
+Untuk halaman dinamis:
+
+```
+$key = 'page_' . md5($request->getUri());
+```

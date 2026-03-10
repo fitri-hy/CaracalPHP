@@ -1,225 +1,157 @@
-# 📘 CaracalPHP – Config Usage Documentation
+# CaracalPHP Config Usage Documentation
 
 Class konfigurasi:
 
-```php
+```
 Caracal\Core\Config
 ```
 
-Config bertugas untuk:
+Config bertanggung jawab untuk:
 
-* Memuat file `.env` (sekali saja)
-* Memuat `config/config.php`
-* Menyediakan akses konfigurasi dengan dot notation
-* Menyediakan override sederhana saat runtime
+* memuat `.env`
+* memuat file konfigurasi dari folder `config/`
+* menyediakan akses konfigurasi menggunakan **dot notation**
+* mendukung override runtime
+* menyediakan **config caching**
 
-Config biasanya diakses melalui:
+Config diakses melalui:
 
-```php
+```
 Application::getInstance()->config();
 ```
 
 ---
 
-# 1️⃣ Mengambil Nilai Konfigurasi
+# Mengambil Konfigurasi
 
-Gunakan method:
+Gunakan:
 
-```php
+```
 get(string $key, mixed $default = null)
 ```
 
-Config mendukung **dot notation** untuk membaca nested array.
-
----
-
-## Contoh Struktur `config/config.php`
-
-```php
-return [
-    'app' => [
-        'name' => 'CaracalPHP',
-        'env'  => 'local',
-    ],
-    'database' => [
-        'host' => '127.0.0.1'
-    ]
-];
-```
-
----
-
-## Cara Mengambil Nilai
-
-```php
-use Caracal\Core\Application;
-
-$config = Application::getInstance()->config();
-
-$appName = $config->get('app.name');
-$appEnv  = $config->get('app.env');
-$dbHost  = $config->get('database.host');
-```
-
----
-
-## Menggunakan Default Value
-
-Jika key tidak ditemukan:
-
-```php
-$timezone = $config->get('app.timezone', 'UTC');
-```
-
-Jika `app.timezone` tidak ada, maka `"UTC"` akan dikembalikan.
-
----
-
-# 2️⃣ Cara Kerja Dot Notation
-
-Method `get()` akan:
-
-1. Memecah key berdasarkan `.`
-2. Menelusuri array bertingkat
-3. Mengembalikan default jika salah satu segment tidak ditemukan
-
 Contoh:
+
+```
+$config->get('app.name');
+$config->get('db.host');
+$config->get('mail.host');
+```
+
+---
+
+# Dot Notation
+
+Key:
 
 ```
 app.name
 ```
 
-akan diakses sebagai:
+akan mengakses:
 
-```php
+```
 $config['app']['name']
 ```
 
 ---
 
-# 3️⃣ Penggunaan di Controller
+# Mengecek Konfigurasi
 
-```php
-use Caracal\Core\Application;
-
-class HomeController
-{
-    public function index()
-    {
-        $config = Application::getInstance()->config();
-
-        $appName = $config->get('app.name');
-
-        return $this->view('home.view', [
-            'appName' => $appName
-        ]);
-    }
-}
+```
+$config->has('app.name');
 ```
 
 ---
 
-# 4️⃣ Penggunaan di Service
+# Override Runtime
 
-```php
-use Caracal\Core\Application;
+Sekarang `set()` mendukung dot notation.
 
-class HomeService
-{
-    public function isLocal(): bool
-    {
-        $config = Application::getInstance()->config();
-
-        return $config->get('app.env') === 'local';
-    }
-}
+```
+$config->set('app.debug', true);
 ```
 
 ---
 
-# 5️⃣ Penggunaan di Middleware
+# Mengambil Environment Variable
 
-```php
-use Caracal\Core\Application;
-
-public function handle($request, $next)
-{
-    $config = Application::getInstance()->config();
-
-    if ($config->get('app.env') === 'maintenance') {
-        echo "Application under maintenance.";
-        return;
-    }
-
-    return $next($request);
-}
+```
+$config->env('APP_ENV');
 ```
 
 ---
 
-# 6️⃣ Override Konfigurasi Saat Runtime
+# Multiple Config Files
 
-Tersedia method:
+Folder:
 
-```php
-set(string $key, mixed $value)
+```
+config/
 ```
 
 Contoh:
 
-```php
-$config = Application::getInstance()->config();
-
-$config->set('app.debug', true);
+```
+config/
+   app.php
+   database.php
+   cache.php
 ```
 
-⚠ **Penting (Sesuai Implementasi Asli)**
+Isi file:
 
-Method `set()` **tidak mendukung nested update menggunakan dot notation**.
-
-Artinya:
-
-```php
-$config->set('app.name', 'NewName');
+```
+return [
+    'debug' => true
+];
 ```
 
-Tidak akan mengubah:
+Akan tersedia sebagai:
 
-```php
-['app' => ['name' => '...']]
 ```
-
-Tetapi akan menghasilkan key baru:
-
-```php
-[
-    'app' => [...],
-    'app.name' => 'NewName'
-]
+$config->get('app.debug');
 ```
-
-Jadi `set()` hanya menyimpan key secara literal.
-
-Gunakan hanya untuk override sederhana.
 
 ---
 
-# 7️⃣ Mengambil Semua Konfigurasi
+# Config Cache
 
-```php
-$config = Application::getInstance()->config();
+Untuk production, konfigurasi bisa dikompilasi:
 
-$all = $config->all();
+```
+$config->cache();
 ```
 
-Method `all()` mengembalikan seluruh array konfigurasi yang sudah dimuat.
+File cache:
+
+```
+storage/cache/config.php
+```
+
+Membersihkan cache:
+
+```
+$config->clearCache();
+```
 
 ---
 
-# 📌 Ringkasan Method
+# Mengambil Semua Config
 
-| Method | Fungsi                                     |
-| ------ | ------------------------------------------ |
-| get()  | Mengambil nilai config dengan dot notation |
-| set()  | Menambahkan / override key literal         |
-| all()  | Mengambil seluruh konfigurasi              |
+```
+$config->all();
+```
+
+---
+
+# Ringkasan Method
+
+Method | Fungsi
+get() | mengambil config
+set() | override config
+has() | cek key
+env() | ambil environment variable
+cache() | compile config
+clearCache() | hapus cache config
+all() | semua konfigurasi

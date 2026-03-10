@@ -1,4 +1,4 @@
-# 📘 CaracalPHP – Autoloader Documentation
+# CaracalPHP – Autoloader Documentation
 
 Class:
 
@@ -6,56 +6,65 @@ Class:
 Caracal\Core\Autoloader
 ```
 
-`Autoloader` adalah sistem **PSR-4 style namespace loader sederhana** yang digunakan untuk memuat class secara otomatis berdasarkan namespace.
+`Autoloader` adalah sistem pemuatan class otomatis berbasis **PSR-4 style namespace mapping** yang digunakan oleh CaracalPHP.
+
+Autoloader ini bertanggung jawab untuk memuat file class tanpa perlu `require` manual.
 
 ---
 
-# 🎯 Tujuan Autoloader
+## Tujuan Autoloader
 
-Autoloader bertanggung jawab untuk:
+Autoloader memiliki beberapa tanggung jawab utama:
 
-* Mendaftarkan fungsi autoload ke SPL
-* Menghubungkan namespace dengan folder
+* Mendaftarkan autoload handler ke SPL
+* Menghubungkan namespace dengan directory
 * Mengubah namespace menjadi path file
-* Melakukan `require` file class secara otomatis
+* Memuat class secara otomatis
+* Mendukung class map dan fallback directory
 
 ---
 
-# 1️⃣ Struktur Properti
+## Struktur Properti
 
 ```php
 protected array $prefixes = [];
+protected array $classMap = [];
+protected array $fallbackDirs = [];
 ```
 
-Menyimpan mapping:
+Penjelasan:
 
-```php
-[
-    'Namespace\\' => [
-        '/path/ke/directory/'
-    ]
-]
-```
+| Properti     | Fungsi                                     |
+| ------------ | ------------------------------------------ |
+| prefixes     | Mapping namespace ke folder                |
+| classMap     | Mapping class langsung ke file             |
+| fallbackDirs | Directory fallback jika prefix tidak cocok |
 
 ---
 
-# 2️⃣ Method `register()`
+## register()
+
+Method:
 
 ```php
 public function register(): void
 ```
 
-Digunakan untuk mendaftarkan autoloader ke PHP:
+Method ini mendaftarkan autoloader ke sistem SPL PHP.
 
 ```php
-spl_autoload_register([$this, 'loadClass']);
+spl_autoload_register([$this, 'loadClass'], true, true);
 ```
 
-Biasanya dipanggil di dalam `Application::registerCore()`.
+Setelah method ini dipanggil, PHP akan otomatis memanggil `loadClass()` ketika class tidak ditemukan.
+
+Biasanya dipanggil saat bootstrap framework.
 
 ---
 
-# 3️⃣ Method `addNamespace()`
+## addNamespace()
+
+Method:
 
 ```php
 public function addNamespace(string $prefix, string $baseDir): void
@@ -63,137 +72,168 @@ public function addNamespace(string $prefix, string $baseDir): void
 
 Digunakan untuk mendaftarkan namespace ke directory.
 
----
-
-## Cara Kerja Internal
-
-1. Prefix dibersihkan dan ditambahkan `\`
-2. Base directory diberi trailing slash
-3. Disimpan ke `$prefixes`
-
----
-
-## Contoh Penggunaan
+Contoh:
 
 ```php
-$loader = new Autoloader();
-$loader->register();
-
-$loader->addNamespace('Caracal\\Core', __DIR__);
+$loader->addNamespace('Caracal\\Core', '/core');
 $loader->addNamespace('App\\Modules', '/app/Modules');
 ```
 
-Mapping hasilnya:
+Mapping yang dihasilkan:
 
-```text
+```
 Caracal\Core\ → /core/
 App\Modules\ → /app/Modules/
 ```
 
 ---
 
-# 4️⃣ Method `loadClass()`
+## addFallbackDir()
+
+Method:
 
 ```php
-public function loadClass(string $class): void
+public function addFallbackDir(string $dir): void
 ```
 
-Method ini otomatis dipanggil saat PHP tidak menemukan class.
+Menambahkan directory fallback yang akan digunakan jika namespace tidak cocok dengan prefix yang terdaftar.
+
+Contoh:
+
+```php
+$loader->addFallbackDir('/lib');
+```
+
+Jika class tidak ditemukan di prefix mapping, autoloader akan mencari di folder fallback.
 
 ---
 
-## Cara Kerja Detail
+## addClassMap()
 
-Misalnya ada class:
+Method:
 
 ```php
+public function addClassMap(array $map): void
+```
+
+Digunakan untuk menambahkan mapping class langsung ke file.
+
+Contoh:
+
+```php
+$loader->addClassMap([
+    'App\\Helpers\\Str' => '/app/Helpers/Str.php'
+]);
+```
+
+Keuntungan:
+
+* Lebih cepat
+* Tidak perlu scanning namespace
+
+---
+
+## loadClass()
+
+Method utama autoloader:
+
+```php
+public function loadClass(string $class): bool
+```
+
+Method ini dipanggil otomatis oleh PHP saat class tidak ditemukan.
+
+Langkah kerja autoloader:
+
+1. Cek apakah class ada di `classMap`
+2. Cek prefix namespace yang cocok
+3. Konversi namespace menjadi path
+4. Gabungkan dengan base directory
+5. Require file jika ditemukan
+6. Jika tidak ditemukan, cek fallback directory
+
+---
+
+## Contoh Proses Autoload
+
+Jika ada class:
+
+```
 App\Modules\User\Controllers\UserController
 ```
 
-### Step 1 – Cek Prefix
+Dan namespace mapping:
 
-Dicek apakah class diawali dengan prefix yang terdaftar.
-
-Jika prefix:
-
-```text
-App\Modules\
+```
+App\Modules\ → /app/Modules/
 ```
 
-Maka lanjut.
+Langkah yang dilakukan autoloader:
 
----
+Relative class:
 
-### Step 2 – Ambil Relative Class
-
-Prefix dipotong:
-
-```text
+```
 User\Controllers\UserController
 ```
 
----
+Konversi menjadi path:
 
-### Step 3 – Ubah ke Path
-
-Backslash diubah menjadi slash:
-
-```text
+```
 User/Controllers/UserController.php
 ```
 
----
+Gabungkan dengan base directory:
 
-### Step 4 – Gabungkan dengan BaseDir
-
-```text
+```
 /app/Modules/User/Controllers/UserController.php
 ```
 
----
-
-### Step 5 – Require Jika Ada
+Jika file ada, autoloader akan menjalankan:
 
 ```php
-require $path;
+require $file;
 ```
-
-Jika file ditemukan, autoload berhenti.
 
 ---
 
-# 📌 Integrasi dengan Application
+## Integrasi dengan Application
 
-Di dalam `Application::registerCore()`:
+Autoloader biasanya diinisialisasi di dalam `Application`.
+
+Contoh:
 
 ```php
 $loader = new Autoloader();
 $loader->register();
 
 $loader->addNamespace('Caracal\\Core', __DIR__);
-$loader->addNamespace('App\\Modules', $this->basePath . '/app/Modules');
+$loader->addNamespace('App\\Modules', $app->path('app/Modules'));
 ```
 
-Artinya framework otomatis bisa load:
+Dengan konfigurasi ini, framework dapat memuat:
 
-* Core classes
-* Module classes
+* Core class
+* Module class
 
-Tanpa perlu `require manual`.
+tanpa require manual.
 
 ---
 
-# 📌 Struktur Folder yang Direkomendasikan
+## Struktur Folder yang Direkomendasikan
 
-```text
-/app
-  /Modules
-    /User
-      Controllers/
-      Models/
-      Views/
-
- ...
+```
+app/
+ └ Modules/
+    └ User/
+       ├ Controllers/
+       ├ Models/
+       └ Views/
 ```
 
 Namespace harus mengikuti struktur folder.
+
+Contoh:
+
+```
+namespace App\Modules\User\Controllers;
+```

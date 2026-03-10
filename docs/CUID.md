@@ -1,68 +1,63 @@
-# 📘 CaracalPHP – CUID Usage Documentation
+# CaracalPHP – CUID Usage Documentation
 
-`Caracal\Core\CUID` adalah sistem pembuat ID unik berbasis cluster yang dirancang untuk aplikasi modular dan distributed system.
+`Caracal\Core\CUID` adalah generator **cluster-safe unique ID** untuk aplikasi Caracal.
 
-CUID dirancang untuk:
+Dirancang untuk:
 
-* Ringan
-* Tidak membutuhkan database
-* Tidak membutuhkan Redis
-* Tidak membutuhkan service eksternal
-* Aman untuk high concurrency
-* Production-ready
+* distributed systems
+* high concurrency
+* database indexing
+* microservices tracing
 
----
-
-# 1. Cara Kerja CUID
-
-CUID bekerja dengan mekanisme berikut:
-
-```
-1. Server dikonfigurasi dengan datacenter & worker ID
-2. CUID mengambil timestamp microsecond
-3. CUID menambahkan sequence anti-collision
-4. CUID menambahkan entropy random 4 byte
-5. Data dikemas menjadi 16 byte binary
-6. Binary diencode menjadi Base62 string
-```
-
-Hasilnya adalah ID yang:
-
-* Unik lintas server
-* Bisa diurutkan berdasarkan waktu
-* Bisa di-decode kembali
-* Bisa dikonversi ke UUID
+CUID menghasilkan **16 byte binary ID** yang dapat diubah menjadi **Base62 string**.
 
 ---
 
-# 2. Konfigurasi Cluster (WAJIB)
+# Cara Kerja
 
-Sebelum menggunakan CUID, identitas server harus diatur:
+Struktur CUID:
+
+```
+Timestamp  (8 byte)
+Datacenter (1 byte)
+Worker     (1 byte)
+Sequence   (2 byte)
+Entropy    (4 byte)
+```
+
+Total:
+
+```
+16 byte
+```
+
+Kemudian di-encode menjadi Base62 string.
+
+---
+
+# Konfigurasi Node
+
+Setiap server harus memiliki identitas.
 
 ```php
-\CUID::configure(1, 9);
+use Caracal\Core\CUID;
+
+CUID::configure(1, 9);
 ```
 
 Parameter:
 
-```php
-datacenter (0–255)
-worker     (0–255)
 ```
-
-⚠ Setiap server wajib memiliki kombinasi berbeda.
-Disarankan dipanggil di:
-
-* bootstrap file
-* BaseController
-* service provider
+datacenter 0-255
+worker     0-255
+```
 
 ---
 
-# 3. Generate ID (String Mode)
+# Generate ID
 
 ```php
-$id = \CUID::id();
+$id = CUID::id();
 ```
 
 Contoh output:
@@ -71,61 +66,29 @@ Contoh output:
 7JYYB0wlaiUDDnBaGux
 ```
 
-Gunakan untuk:
-
-* Order ID
-* Invoice ID
-* Transaction ID
-* Tracking ID
-* API Request ID
-
 ---
 
-# 4. Generate Binary ID
-
-Jika ingin menyimpan dalam bentuk raw binary:
+# Generate Binary
 
 ```php
-$binary = \CUID::binary();
+$binary = CUID::binary();
 ```
 
-Untuk mengubah kembali ke string:
-
-```php
-$id = \CUID::fromBinary($binary);
-```
-
-Cocok untuk:
-
-* Penyimpanan BINARY(16)
-* Optimasi index database
-* High scale system
-
----
-
-# 5. Validasi ID
-
-```php
-$isValid = \CUID::isValid($id);
-```
-
-Return:
+Convert kembali:
 
 ```
-true / false
+$id = CUID::fromBinary($binary);
 ```
 
 ---
 
-# 6. Decode ID
-
-## Decode dari String (Base62)
+# Decode ID
 
 ```php
-$data = \CUID::decodeId($id);
+$data = CUID::decodeId($id);
 ```
 
-Contoh hasil:
+Output:
 
 ```php
 [
@@ -134,41 +97,29 @@ Contoh hasil:
   'worker'          => 9,
   'sequence'        => 0,
   'entropy'         => '713e62a7',
-  'version'         => '1.0.0'
+  'version'         => '1.1.0'
 ]
 ```
 
 ---
 
-## Decode dari Binary
+# Ambil Timestamp
 
-```php
-$data = \CUID::decode($binary);
+```
+$timestamp = CUID::timestampFromId($id);
 ```
 
-Digunakan saat ID disimpan sebagai `BINARY(16)`.
+Timestamp dalam **microsecond**.
 
 ---
 
-# 7. Timestamp Handling
+# Convert ke Datetime
 
-## Ambil Timestamp dari ID
-
-```php
-$timestamp = \CUID::timestampFromId($id);
+```
+$datetime = CUID::datetime($binary);
 ```
 
-Timestamp dikembalikan dalam **microsecond**.
-
----
-
-## Format ke Datetime
-
-```php
-$datetime = \CUID::datetime($binary);
-```
-
-Output:
+Contoh:
 
 ```
 2026-03-05 08:04:33.843050
@@ -176,51 +127,38 @@ Output:
 
 ---
 
-# 8. UUID Compatibility Mode
+# UUID Compatibility
 
-CUID dapat dikonversi menjadi format UUID standar:
-
-```php
-$uuid = \CUID::uuid($binary);
+```
+$uuid = CUID::uuid($binary);
 ```
 
-Contoh output:
+Contoh:
 
 ```
 00004218-6ce8-c78a-0109-0000713e62a7
 ```
 
-Digunakan untuk:
-
-* Integrasi sistem berbasis UUID
-* Interoperability
-* Export standar 36 karakter
-
 ---
 
-# 9. Sharding Helper
+# Sharding Helper
 
-Untuk pembagian database shard:
-
-```php
-$shard = \CUID::shard($id, 32);
+```
+$shard = CUID::shard($id, 32);
 ```
 
-Artinya ID akan masuk shard 0–31.
-Cocok untuk:
+Digunakan untuk:
 
-* Partitioned table
-* Multi-database architecture
-* Horizontal scaling
+* database sharding
+* partition table
+* distributed storage
 
 ---
 
-# 10. Node Information
+# Node Information
 
-Untuk melihat konfigurasi aktif:
-
-```php
-$node = \CUID::node();
+```
+CUID::node();
 ```
 
 Output:
@@ -234,101 +172,50 @@ Output:
 
 ---
 
-# 11. Benchmark
+# Benchmark
 
-Untuk mengukur performa generator:
-
-```php
-echo \CUID::benchmark(10000);
+```
+echo CUID::benchmark(10000);
 ```
 
 Contoh:
 
 ```
-1.4 ms (1000 IDs)
+12.4 ms (10000 IDs)
 ```
 
 ---
 
-# 12. Struktur Internal ID
+# Database Recommendation
 
-CUID terdiri dari 16 byte:
+## String
 
-| Field      | Size |
-| ---------- | ---- |
-| Timestamp  | 8B   |
-| Datacenter | 1B   |
-| Worker     | 1B   |
-| Sequence   | 2B   |
-| Entropy    | 4B   |
+```
+id VARCHAR(24)
+```
 
-Kemudian diencode ke Base62 string.
+## Binary (Recommended)
+
+```
+id BINARY(16)
+```
+
+Binary indexing jauh lebih cepat.
 
 ---
 
-# 13. Rekomendasi Database
+# Best Practice
 
-## Opsi 1 – String
+Gunakan untuk:
 
-```sql
-id VARCHAR(24) PRIMARY KEY
-```
+* Order ID
+* Invoice ID
+* Transaction ID
+* Distributed logging
+* API request tracing
 
-## Opsi 2 – Binary (Recommended)
+Jangan gunakan untuk:
 
-```sql
-id BINARY(16) PRIMARY KEY
-```
-
----
-
-# 14. Best Practice
-
-### Gunakan untuk:
-
-* Primary key publik
-* Distributed system
-* Microservices
-* High-concurrency API
-* Event tracing
-
-### Jangan gunakan untuk:
-
-* Password reset token
-* Authentication token
-* Cryptographic secret
-
----
-
-# 15. Ringkasan Penggunaan Dasar
-
-```php
-// Konfigurasi node
-\CUID::configure(1, 42);
-
-// Generate 1 CUID
-\CUID::binary();
-\CUID::fromBinary($cuidBinary);
-
-// Decode
-\CUID::decode($cuidBinary);
-\CUID::decodeId($cuidId);
-
-// Timestamp & Datetime
-\CUID::timestampFromId($cuidId);
-\CUID::datetime($cuidBinary);
-
-// UUID format
-\CUID::uuid($cuidBinary);
-
-// Validasi & Shard 
-\CUID::isValid($cuidId);
-\CUID::shard($cuidId);
-
-// Node & Version
-\ CUID::node();
-\CUID::version();
-
-// Benchmark test ---
-\CUID::benchmark(1000);
-```
+* password reset token
+* authentication token
+* cryptographic secrets

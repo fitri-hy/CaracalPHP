@@ -10,41 +10,40 @@ class Cache
     protected int $defaultTTL = 3600;
     protected string $cachePath;
     protected string $driver;
+    protected string $prefix = 'caracal:';
 
     public function __construct()
     {
         $config = Application::getInstance()->config();
 
-        $this->enabled = filter_var($config->get('cache.enabled', true), FILTER_VALIDATE_BOOLEAN);
-        $this->driver  = strtolower($config->get('cache.driver', 'file')); // file atau redis
+        $this->enabled    = filter_var($config->get('cache.enabled', true), FILTER_VALIDATE_BOOLEAN);
+        $this->driver     = strtolower($config->get('cache.driver', 'file'));
         $this->defaultTTL = (int) $config->get('cache.ttl', 3600);
-        $this->cachePath = dirname(__DIR__) . '/storage/cache/';
+        $this->prefix     = (string) $config->get('cache.prefix', 'caracal:');
+        $this->cachePath  = dirname(__DIR__) . '/storage/cache/';
 
         if (!is_dir($this->cachePath)) {
             mkdir($this->cachePath, 0755, true);
         }
 
         if (!$this->enabled) {
-            $this->redis = null;
             return;
         }
 
         if ($this->driver === 'redis' && class_exists(Client::class) && $config->get('cache.redis.host')) {
-            $redisConfig = [
-                'scheme' => 'tcp',
-                'host' => $config->get('cache.redis.host', '127.0.0.1'),
-                'port' => (int) $config->get('cache.redis.port', 6379),
-            ];
-
-            $redisPassword = $config->get('cache.redis.password', null);
-            if (!empty($redisPassword)) {
-                $redisConfig['password'] = $redisPassword;
-            }
 
             try {
-                $this->redis = new Client($redisConfig);
+
+                $this->redis = new Client([
+                    'scheme' => 'tcp',
+                    'host'   => $config->get('cache.redis.host', '127.0.0.1'),
+                    'port'   => (int)$config->get('cache.redis.port', 6379),
+                    'password' => $config->get('cache.redis.password', null),
+                ]);
+
                 $this->redis->ping();
-            } catch (\Exception $e) {
+
+            } catch (\Throwable) {
                 $this->redis = null;
             }
         }
@@ -55,39 +54,64 @@ class Cache
         if (!$this->enabled) return;
 
         $ttl = $ttl ?? $this->defaultTTL;
+        $key = $this->prefix . $key;
 
-        if ($this->driver === 'redis' && $this->redis) {
+        if ($this->redis) {
             try {
                 $this->redis->setex($key, $ttl, serialize($value));
-            } catch (\Exception $e) {
+                return;
+            } catch (\Throwable) {
                 $this->redis = null;
             }
         }
 
         $file = $this->getFilePath($key);
-        file_put_contents($file, serialize([
-            'value' => $value,
+
+        $data = serialize([
+            'value'   => $value,
             'expires' => time() + $ttl
-        ]));
+        ]);
+
+        $tmp = $file . '.tmp';
+        file_put_contents($tmp, $data, LOCK_EX);
+        rename($tmp, $file);
     }
 
     public function get(string $key, mixed $default = null): mixed
     {
         if (!$this->enabled) return $default;
 
-        if ($this->driver === 'redis' && $this->redis) {
+        $key = $this->prefix . $key;
+
+        if ($this->redis) {
             try {
+
                 $val = $this->redis->get($key);
-                if ($val !== null) return unserialize($val);
-            } catch (\Exception $e) {
+
+                if ($val !== null) {
+                    return unserialize($val);
+                }
+
+            } catch (\Throwable) {
                 $this->redis = null;
             }
         }
 
         $file = $this->getFilePath($key);
-        if (!file_exists($file)) return $default;
 
-        $data = unserialize(file_get_contents($file));
+        if (!is_file($file)) {
+            return $default;
+        }
+
+        $raw = file_get_contents($file);
+
+        $data = @unserialize($raw);
+
+        if (!is_array($data)) {
+            @unlink($file);
+            return $default;
+        }
+
         if (isset($data['expires']) && time() > $data['expires']) {
             @unlink($file);
             return $default;
@@ -96,44 +120,70 @@ class Cache
         return $data['value'] ?? $default;
     }
 
+    public function has(string $key): bool
+    {
+        return $this->get($key, '__null__') !== '__null__';
+    }
+
     public function delete(string $key): void
     {
         if (!$this->enabled) return;
 
-        if ($this->driver === 'redis' && $this->redis) {
+        $key = $this->prefix . $key;
+
+        if ($this->redis) {
             try {
                 $this->redis->del([$key]);
-            } catch (\Exception $e) {
+            } catch (\Throwable) {
                 $this->redis = null;
             }
         }
 
         $file = $this->getFilePath($key);
-        @unlink($file);
+
+        if (is_file($file)) {
+            @unlink($file);
+        }
+    }
+
+    public function remember(string $key, callable $callback, int $ttl = null): mixed
+    {
+        $value = $this->get($key);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        $value = $callback();
+
+        $this->set($key, $value, $ttl);
+
+        return $value;
     }
 
     protected function getFilePath(string $key): string
     {
-        $safeKey = str_replace(['/', '\\'], '_', $key);
-        return $this->cachePath . $safeKey . '.cache';
+        $hash = md5($key);
+        return $this->cachePath . $hash . '.cache';
+    }
+
+    public function clearAll(): void
+    {
+        if (!$this->enabled) return;
+
+        if ($this->redis) {
+            try {
+                $this->redis->flushdb();
+            } catch (\Throwable) {}
+        }
+
+        foreach (glob($this->cachePath . '*.cache') as $file) {
+            @unlink($file);
+        }
     }
 
     public function getDefaultTTL(): int
     {
         return $this->defaultTTL;
     }
-	
-	public function clearAll(): void
-	{
-		if (!$this->enabled) return;
-
-		if ($this->driver === 'redis' && $this->redis) {
-			$this->redis->flushdb();
-		}
-
-		$files = glob($this->cachePath . '*.cache');
-		foreach ($files as $file) {
-			@unlink($file);
-		}
-	}
 }

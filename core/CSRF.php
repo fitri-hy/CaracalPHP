@@ -4,8 +4,12 @@ namespace Caracal\Core;
 class CSRF
 {
     protected Session $session;
-    protected string $key = '_csrf_token';
+
+    protected string $key = '_csrf_tokens';
+
     protected int $length = 32;
+
+    protected int $ttl = 1800;
 
     public function __construct()
     {
@@ -14,36 +18,72 @@ class CSRF
 
     public function generate(): string
     {
-        $appKey = Helpers::env('APP_KEY');
-        $random = random_bytes($this->length);
-        $token = hash_hmac('sha256', $random, $appKey);
+        $token = base64_encode(random_bytes($this->length));
 
-        $this->session->set($this->key, $token);
+        $tokens = $this->session->get($this->key, []);
+
+        $tokens[$token] = time();
+
+        $this->session->set($this->key, $tokens);
 
         return $token;
     }
 
     public function validate(?string $token): bool
     {
-        if (!$token) return false;
+        if (!$token) {
+            return false;
+        }
 
-        $stored = $this->session->get($this->key);
-        if (!$stored) return false;
+        $tokens = $this->session->get($this->key, []);
 
-        $this->session->remove($this->key);
+        if (!isset($tokens[$token])) {
+            return false;
+        }
 
-        return hash_equals($stored, $token);
+        $created = $tokens[$token];
+
+        unset($tokens[$token]);
+
+        $this->session->set($this->key, $tokens);
+
+        if ((time() - $created) > $this->ttl) {
+            return false;
+        }
+
+        return true;
     }
 
     public function inputField(): string
     {
         $token = $this->generate();
-        return '<input type="hidden" name="_csrf" value="' . htmlspecialchars($token, ENT_QUOTES) . '">';
+
+        return '<input type="hidden" name="_csrf" value="' .
+            htmlspecialchars($token, ENT_QUOTES) .
+            '">';
+    }
+
+    public function token(): string
+    {
+        return $this->generate();
     }
 
     public function checkPost(): bool
     {
         $token = $_POST['_csrf'] ?? null;
+
         return $this->validate($token);
+    }
+
+    public function checkHeader(): bool
+    {
+        $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+
+        return $this->validate($token);
+    }
+
+    public function clear(): void
+    {
+        $this->session->remove($this->key);
     }
 }

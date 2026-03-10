@@ -1,4 +1,5 @@
 <?php
+
 namespace Caracal\Core;
 
 class View
@@ -14,52 +15,97 @@ class View
         $this->layout = $this->base . DIRECTORY_SEPARATOR . 'layout.view.php';
     }
 
-	public function render(string $template, array $data = [], bool $useLayout = true): string
-	{
-		$cache = Application::getInstance()->cache();
+    public function render(string $template, array $data = [], bool $useLayout = true): string
+    {
+        $app    = Application::getInstance();
+        $cache  = $app->cache();
+        $config = $app->config();
 
-		$key = 'view_' . md5($template . serialize($data));
+        $cacheEnabled = $config->get('cache.enabled', false);
 
-		$cached = $cache->get($key);
-		if ($cached !== null) {
-			return $cached;
-		}
+        $cacheKey = 'view_' . md5($template . serialize(array_keys($data)));
 
-		$content = $this->renderFile($template, $data);
+        if ($cacheEnabled) {
+            $cached = $cache->get($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
+        }
 
-		if ($useLayout) {
-			$layoutContent = $cache->get('layout_global');
-			if ($layoutContent === null) {
-				$layoutContent = $this->renderFile($this->layout, array_merge($data, ['content' => $content]));
-				$cache->set('layout_global', $layoutContent);
-			}
-			$content = str_replace('{{content}}', $content, $layoutContent);
-		}
+        $content = $this->renderFile($template, $data);
 
-		$cache->set($key, $content);
+        if ($useLayout && file_exists($this->layout)) {
 
-		return $content;
-	}
+            $layout = null;
 
-	protected function renderFile(string $template, array $data): string
-	{
-		extract($data);
+            if ($cacheEnabled) {
+                $layout = $cache->get('layout_template');
+            }
 
-		$file = str_starts_with($template, $this->base)
-			? $template
-			: $this->base . DIRECTORY_SEPARATOR . $template;
+            if ($layout === null) {
+                $layout = file_get_contents($this->layout);
 
-		if (!file_exists($file)) {
-			throw new \Exception("View {$file} not found");
-		}
+                if ($cacheEnabled) {
+                    $cache->set('layout_template', $layout);
+                }
+            }
 
-		ob_start();
-		try {
-			include $file;
-		} catch (\Throwable $e) {
-			ob_end_clean();
-			throw $e;
-		}
-		return ob_get_clean();
-	}
+            extract($data);
+
+            ob_start();
+            eval('?>' . str_replace('{{content}}', $content, $layout));
+            $content = ob_get_clean();
+        }
+
+        if ($cacheEnabled) {
+            $cache->set($cacheKey, $content);
+        }
+
+        return $content;
+    }
+
+    protected function renderFile(string $template, array $data): string
+    {
+        extract($data);
+
+        $file = str_starts_with($template, $this->base)
+            ? $template
+            : $this->base . DIRECTORY_SEPARATOR . $template;
+
+        $file = realpath($file);
+
+        if (!$file || !str_starts_with($file, $this->base)) {
+            throw new \Exception("Invalid view path");
+        }
+
+        if (!file_exists($file)) {
+            throw new \Exception("View {$file} not found");
+        }
+
+        ob_start();
+
+        try {
+            include $file;
+        } catch (\Throwable $e) {
+            ob_end_clean();
+            throw $e;
+        }
+
+        return ob_get_clean();
+    }
+
+    public function setLayout(string $layout): void
+    {
+        $this->layout = $layout;
+    }
+
+    public function getLayout(): string
+    {
+        return $this->layout;
+    }
+
+    public function partial(string $template, array $data = []): void
+    {
+        echo $this->renderFile($template, $data);
+    }
 }

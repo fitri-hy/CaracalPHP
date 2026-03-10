@@ -2,8 +2,8 @@
 namespace Caracal\Core;
 
 use FastRoute\RouteCollector;
-use function FastRoute\simpleDispatcher;
 use FastRoute\Dispatcher;
+use function FastRoute\cachedDispatcher;
 use ReflectionClass;
 use ReflectionMethod;
 use Throwable;
@@ -11,11 +11,16 @@ use Throwable;
 class Router
 {
     protected Application $app;
+
     protected array $routes = [];
     protected array $namedRoutes = [];
     protected array $groupStack = [];
+
     protected Cache $cache;
+
     protected string $cacheKey = 'routes';
+
+    protected ?Dispatcher $dispatcher = null;
 
     public function __construct(Application $app)
     {
@@ -25,22 +30,16 @@ class Router
         $this->load();
     }
 
-    public function add(
-        string $method,
-        string $path,
-        string $handler,
-        array $options = []
-    ): void {
-
-        $groupPrefix = $this->currentGroupPrefix();
-        $groupMiddleware = $this->currentGroupMiddleware();
+    public function add(string $method, string $path, string $handler, array $options = []): void
+    {
+        $methods = explode('|', strtoupper($method));
 
         $route = [
-            'method'     => strtoupper($method),
-            'path'       => $groupPrefix . $path,
+            'methods'    => $methods,
+            'path'       => $this->currentGroupPrefix() . $path,
             'handler'    => $handler,
             'middleware' => array_merge(
-                $groupMiddleware,
+                $this->currentGroupMiddleware(),
                 $options['middleware'] ?? []
             ),
             'name'       => $options['name'] ?? null
@@ -53,22 +52,45 @@ class Router
         }
     }
 
+    public function get(string $path, string $handler, array $options = []): void
+    {
+        $this->add('GET', $path, $handler, $options);
+    }
+
+    public function post(string $path, string $handler, array $options = []): void
+    {
+        $this->add('POST', $path, $handler, $options);
+    }
+
+    public function put(string $path, string $handler, array $options = []): void
+    {
+        $this->add('PUT', $path, $handler, $options);
+    }
+
+    public function delete(string $path, string $handler, array $options = []): void
+    {
+        $this->add('DELETE', $path, $handler, $options);
+    }
+
+    public function group(array $options, callable $callback): void
+    {
+        $this->groupStack[] = $options;
+
+        $callback($this);
+
+        array_pop($this->groupStack);
+    }
+
     protected function currentGroupPrefix(): string
     {
-        $prefixes = array_map(
-            fn($g) => $g['prefix'] ?? '',
-            $this->groupStack
-        );
+        $prefixes = array_map(fn($g) => $g['prefix'] ?? '', $this->groupStack);
 
         return implode('', $prefixes);
     }
 
     protected function currentGroupMiddleware(): array
     {
-        $middlewares = array_map(
-            fn($g) => $g['middleware'] ?? [],
-            $this->groupStack
-        );
+        $middlewares = array_map(fn($g) => $g['middleware'] ?? [], $this->groupStack);
 
         return $middlewares ? array_merge(...$middlewares) : [];
     }
@@ -103,55 +125,75 @@ class Router
             }
         }
 
-        $this->cache->set(
-            $this->cacheKey,
+        $this->cache->set($this->cacheKey, [
+            'routes' => $this->routes,
+            'named'  => $this->namedRoutes
+        ]);
+    }
+
+    protected function dispatcher(): Dispatcher
+    {
+        if ($this->dispatcher) {
+            return $this->dispatcher;
+        }
+
+        $this->dispatcher = cachedDispatcher(
+            function (RouteCollector $r) {
+
+                foreach ($this->routes as $route) {
+
+                    foreach ($route['methods'] as $method) {
+
+                        $r->addRoute($method, $route['path'], $route);
+
+                    }
+                }
+
+            },
             [
-                'routes' => $this->routes,
-                'named'  => $this->namedRoutes
-            ],
-            $this->cache->getDefaultTTL()
+                'cacheFile' => $this->app->path('storage/cache/routes.php')
+            ]
         );
+
+        return $this->dispatcher;
     }
 
     public function dispatch(Request $req): Response
     {
-        $dispatcher = simpleDispatcher(function (RouteCollector $r) {
-            foreach ($this->routes as $route) {
-                $r->addRoute(
-                    $route['method'],
-                    $route['path'],
-                    $route
-                );
-            }
-        });
-
         $uri = $req->uri();
 
         $base = dirname($_SERVER['SCRIPT_NAME']);
+
         if ($base !== '/' && str_starts_with($uri, $base)) {
             $uri = substr($uri, strlen($base));
         }
 
         $uri = $uri ?: '/';
 
-        $info = $dispatcher->dispatch($req->method(), $uri);
-
-        switch ($info[0]) {
-            case Dispatcher::NOT_FOUND:
-                return ErrorHandler::notFound();
-
-            case Dispatcher::METHOD_NOT_ALLOWED:
-                return new Response('405 Method Not Allowed', 405);
-        }
+        $info = $this->dispatcher()->dispatch($req->method(), $uri);
 
         try {
-            $route = $info[1];
-            $vars  = $info[2];
 
-            return $this->runRoute($route, $req, $vars);
+            switch ($info[0]) {
+
+                case Dispatcher::NOT_FOUND:
+                    return ErrorHandler::notFound();
+
+                case Dispatcher::METHOD_NOT_ALLOWED:
+                    return new Response('405 Method Not Allowed', 405);
+
+                case Dispatcher::FOUND:
+                    $route = $info[1];
+                    $vars  = $info[2];
+
+                    return $this->runRoute($route, $req, $vars);
+
+            }
 
         } catch (Throwable $e) {
+
             return ErrorHandler::handle($e);
+
         }
     }
 
@@ -162,14 +204,21 @@ class Router
         $instance = $this->resolve($controller);
 
         $final = function () use ($instance, $method, $vars) {
+
             $result = $this->invoke($instance, $method, $vars);
+
             return $this->normalizeResponse($result);
+
         };
 
         if (!empty($route['middleware'])) {
-            $middlewareRunner = new Middleware();
-            $middlewareRunner->register($route['middleware']);
-            return $middlewareRunner->run($req, $final);
+
+            $runner = new Middleware();
+
+            $runner->register($route['middleware']);
+
+            return $runner->run($req, $final);
+
         }
 
         return $final();
@@ -192,9 +241,13 @@ class Router
             $type = $param->getType();
 
             if ($type && !$type->isBuiltin()) {
+
                 $dependencies[] = $this->resolve($type->getName());
+
             } else {
+
                 $dependencies[] = null;
+
             }
         }
 
@@ -212,16 +265,21 @@ class Router
             $type = $param->getType();
 
             if ($type && $type->getName() === Request::class) {
+
                 $args[] = Request::capture();
 
             } elseif ($type && !$type->isBuiltin()) {
+
                 $args[] = $this->resolve($type->getName());
 
             } elseif (isset($vars[$param->getName()])) {
+
                 $args[] = $vars[$param->getName()];
 
             } else {
+
                 $args[] = null;
+
             }
         }
 
