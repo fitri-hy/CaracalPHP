@@ -1,22 +1,22 @@
-# 📘 CaracalPHP – Middleware Documentation
+# CaracalPHP – Middleware Documentation
 
-File ini berisi:
+This file contains:
 
 ```php
 Caracal\Core\MiddlewareInterface
 Caracal\Core\Middleware
 ```
 
-Middleware digunakan untuk:
+Middleware is used to:
 
-* Memproses request sebelum controller
-* Memodifikasi request/response
-* Menghentikan eksekusi jika perlu
-* Membuat pipeline eksekusi berantai
+* Process requests before reaching the controller
+* Modify requests or responses
+* Stop execution if necessary
+* Create a chained execution pipeline
 
 ---
 
-# 1️⃣ MiddlewareInterface
+MiddlewareInterface:
 
 ```php
 interface MiddlewareInterface
@@ -25,7 +25,7 @@ interface MiddlewareInterface
 }
 ```
 
-Semua middleware harus mengimplementasikan method:
+All middleware must implement the `handle` method:
 
 ```php
 handle(Request $request, callable $next): Response
@@ -33,16 +33,16 @@ handle(Request $request, callable $next): Response
 
 ---
 
-## Parameter
+Parameters:
 
-| Parameter | Fungsi                             |
-| --------- | ---------------------------------- |
-| $request  | Object Request saat ini            |
-| $next     | Closure untuk melanjutkan pipeline |
+| Parameter | Purpose                          |
+| --------- | -------------------------------- |
+| $request  | The current Request object       |
+| $next     | Closure to continue the pipeline |
 
 ---
 
-## Contoh Middleware
+Example middleware:
 
 ```php
 use Caracal\Core\MiddlewareInterface;
@@ -64,28 +64,26 @@ class AuthMiddleware implements MiddlewareInterface
 
 ---
 
-# 2️⃣ Class Middleware (Pipeline Executor)
+Middleware class (Pipeline Executor):
 
 ```php
 class Middleware
 ```
 
-Class ini bertugas:
+This class is responsible for:
 
-* Menyimpan daftar middleware
-* Menjalankan middleware secara berantai (pipeline pattern)
+* Storing the list of middleware
+* Running middleware in a chained pipeline
 
 ---
 
-# 3️⃣ Method register()
+Method `register`:
 
 ```php
 public function register(array $middlewares): void
 ```
 
-Digunakan untuk mendaftarkan middleware.
-
-Contoh:
+Used to register middleware. Example:
 
 ```php
 $middleware = new Middleware();
@@ -96,21 +94,21 @@ $middleware->register([
 ]);
 ```
 
-Array harus berisi nama class middleware.
+The array must contain middleware class names.
 
 ---
 
-# 4️⃣ Method run()
+Method `run`:
 
 ```php
 public function run(Request $request, callable $final): Response
 ```
 
-Method ini menjalankan seluruh middleware secara berantai.
+This method executes all registered middleware in a chain.
 
 ---
 
-## Cara Kerja Internal
+Internal workflow:
 
 ```php
 $stack = array_reduce(
@@ -121,21 +119,21 @@ $stack = array_reduce(
 );
 ```
 
-Penjelasan:
+Explanation:
 
-1. Middleware dibalik urutannya
-2. Dibuat nested closure
-3. Setiap middleware menerima:
+* Middleware are reversed in order
+* Nested closures are created
+* Each middleware receives:
 
-   * Request
-   * Next closure
-4. Middleware terakhir akan memanggil `$final`
+  * Request
+  * Next closure
+* The last middleware calls `$final`
 
 ---
 
-## Ilustrasi Pipeline
+Pipeline illustration:
 
-Jika middleware:
+If the middleware array is:
 
 ```php
 [
@@ -145,7 +143,7 @@ Jika middleware:
 ]
 ```
 
-Maka eksekusi menjadi:
+The execution becomes:
 
 ```
 A → B → C → FINAL
@@ -153,7 +151,7 @@ A → B → C → FINAL
 
 ---
 
-# 5️⃣ Contoh Penggunaan Lengkap
+Complete usage example:
 
 ```php
 use Caracal\Core\Middleware;
@@ -178,23 +176,21 @@ $response->send();
 
 ---
 
-# 📌 Pola Eksekusi
+Execution pattern:
 
-Setiap middleware harus:
+* Each middleware must either:
 
-* Memanggil `$next($request)` untuk lanjut
-* Atau return `Response` untuk menghentikan pipeline
+  * Call `$next($request)` to continue
+  * Or return a `Response` to stop the pipeline
 
 ---
 
-# 📌 Menghentikan Eksekusi
+Stopping execution:
 
-Jika middleware tidak memanggil `$next`, pipeline berhenti.
-
-Contoh:
+If middleware does not call `$next`, the pipeline stops. Example:
 
 ```php
 return new Response('Forbidden', 403);
 ```
 
-Controller tidak akan dijalankan.
+The controller will not be executed.

@@ -1,71 +1,71 @@
-# 📘 CaracalPHP – ORM Documentation
+# CaracalPHP – ORM Documentation
 
 Class:
 
-```php id="7m3d2k"
+```php
 Caracal\Core\ORM
 ```
 
-`ORM` adalah abstract base model yang meng-extend Eloquent Model dari Illuminate Database.
+`ORM` is an abstract base model that extends the Eloquent `Model` from Illuminate Database.
 
-Class ini berfungsi sebagai:
+This class serves as:
 
-* Bridge antara CaracalPHP dan Eloquent ORM
-* Validator bahwa database aktif
-* Wrapper sederhana untuk query builder
-
----
-
-# 🎯 Tujuan ORM
-
-* Menggunakan Eloquent tanpa full Laravel
-* Menjamin database aktif sebelum model digunakan
-* Menyediakan akses query melalui static method
+* A bridge between CaracalPHP and Eloquent ORM
+* A validator to ensure the database is active
+* A lightweight wrapper for the query builder
 
 ---
 
-# 1️⃣ Inheritance
+Purpose of ORM:
 
-```php id="5s0hty"
+* Use Eloquent without requiring full Laravel
+* Ensure the database is active before the model is used
+* Provide access to queries via static methods
+
+---
+
+Inheritance:
+
+```php
 abstract class ORM extends Model
 ```
 
-Artinya semua model di CaracalPHP harus:
+All CaracalPHP models must extend `ORM`:
 
-```php id="k0m6x2"
+```php
 class User extends ORM
 ```
 
-Bukan langsung extend `Model`.
+They should **not** extend `Model` directly.
 
 ---
 
-# 2️⃣ Protected Property
+Protected property:
 
-```php id="yt3b8p"
+```php
 protected $guarded = [];
 ```
 
-Artinya:
+Explanation:
 
-* Semua field boleh di-mass assign
-* Tidak ada proteksi field bawaan
+* All fields are mass assignable
+* No default field protection is applied
 
 ---
 
-# 3️⃣ Constructor
+Constructor:
 
-```php id="p3q0cm"
+```php
 public function __construct(array $attributes = [])
 ```
 
-Sebelum parent constructor dipanggil, dilakukan dua validasi penting.
+Before calling the parent constructor, two validations are performed.
 
 ---
 
-## Validasi 1 – Database Aktif
+Database Active Validation:
 
-```php id="n1z6ov"
+```php
 $db = Application::getInstance()->db();
 
 if (!$db || !$db->isConnected()) {
@@ -73,48 +73,47 @@ if (!$db || !$db->isConnected()) {
 }
 ```
 
-Artinya:
+Meaning:
 
-* Jika database disabled
-* Atau koneksi gagal
-* Maka ORM tidak bisa digunakan
+* ORM cannot be used if the database is disabled
+* Or if the database connection fails
 
 ---
 
-## Validasi 2 – Capsule Tersedia
+Capsule Availability Validation:
 
-```php id="3m6vyo"
+```php
 if (!class_exists(Capsule::class)) {
     throw new RuntimeException("Illuminate Database Capsule is not yet available.");
 }
 ```
 
-Artinya:
+Meaning:
 
-* Illuminate Database harus terinstall
-* Capsule harus tersedia
+* Illuminate Database must be installed
+* Capsule must be available
 
 ---
 
-# 4️⃣ Method table()
+Method `table`:
 
-```php id="ov7zwr"
+```php
 public static function table(): \Illuminate\Database\Query\Builder
 ```
 
-Return:
+Returns:
 
-```php id="m3dp9i"
+```php
 static::query();
 ```
 
-Digunakan untuk mendapatkan query builder.
+Used to obtain a query builder for the model.
 
 ---
 
-# 📌 Contoh Model
+Example Model:
 
-```php id="5nldv7"
+```php
 use Caracal\Core\ORM;
 
 class User extends ORM
@@ -125,59 +124,49 @@ class User extends ORM
 
 ---
 
-# 📌 Contoh Penggunaan
+Usage Examples
 
-## Mengambil Semua Data
+Retrieve all data:
 
-```php id="pltn1o"
+```php
 $users = User::all();
 ```
 
----
+Query builder via `table()`:
 
-## Query Builder via table()
-
-```php id="a8e5kz"
+```php
 $activeUsers = User::table()
     ->where('status', 'active')
     ->get();
 ```
 
----
+Create data:
 
-## Create Data
-
-```php id="rgm3lm"
+```php
 User::create([
     'name' => 'John',
     'email' => 'john@example.com'
 ]);
 ```
 
----
+Update data:
 
-## Update Data
-
-```php id="2jndsy"
+```php
 $user = User::find(1);
 $user->update(['name' => 'Updated']);
 ```
 
----
+Delete data:
 
-## Delete Data
-
-```php id="lj4i6b"
+```php
 User::destroy(1);
 ```
 
 ---
 
-# 📌 Relasi Eloquent Tetap Bisa Digunakan
+Eloquent relationships are fully supported:
 
-Karena ini extend Eloquent Model, semua fitur relasi tetap tersedia:
-
-```php id="g0m5z9"
+```php
 public function posts()
 {
     return $this->hasMany(Post::class);
@@ -186,19 +175,19 @@ public function posts()
 
 ---
 
-# ⚠ Perilaku Penting Sesuai Implementasi
+Important Behavior:
 
-✔ Database wajib aktif sebelum model dipakai
-✔ Throw RuntimeException jika DB tidak aktif
-✔ Throw RuntimeException jika Capsule tidak tersedia
-✔ Tidak ada konfigurasi koneksi di dalam class ini
-✔ Bergantung pada Database bootstrap di Application
+* Database must be active before using any model
+* Throws `RuntimeException` if the database is inactive
+* Throws `RuntimeException` if Capsule is unavailable
+* No connection configuration exists within this class
+* Relies on database bootstrap from the Application
 
 ---
 
-# 📌 Kapan Error Akan Terjadi?
+When Errors Occur:
 
-1. Config db.enabled = false
-2. Koneksi database gagal
-3. Illuminate Database belum terinstall
-4. Capsule belum di-bootstrap
+* `db.enabled = false` in configuration
+* Database connection fails
+* Illuminate Database is not installed
+* Capsule is not bootstrapped

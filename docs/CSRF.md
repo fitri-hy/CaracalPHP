@@ -1,76 +1,60 @@
 # CaracalPHP – CSRF Protection Documentation
 
-Class:
+Class
 
-```
+```php id="s3g9af"
 Caracal\Core\CSRF
 ```
 
-Class ini menyediakan proteksi terhadap **Cross-Site Request Forgery (CSRF)**.
+This class provides protection against **Cross-Site Request Forgery (CSRF)**.
 
-Digunakan untuk:
-
-* generate CSRF token
-* menyisipkan token ke form
-* memvalidasi token saat request
-* proteksi POST / PUT / DELETE
+It is used to generate tokens, inject tokens into forms, validate tokens during requests, and protect POST, PUT, and DELETE operations.
 
 ---
 
-# Cara Kerja CSRF di Caracal
+## CSRF Workflow in Caracal
 
-1 Token dibuat menggunakan
+The CSRF protection mechanism follows this process.
 
-```
-random_bytes()
-```
-
-2 Token disimpan di **Session**
-
-3 Token dikirim melalui:
-
-```
-hidden input form
-atau header X-CSRF-TOKEN
-```
-
-4 Saat request masuk token divalidasi
-
-5 Token hanya dapat digunakan **sekali**
+A token is generated using `random_bytes()`
+The token is stored in the session
+The token is sent through a hidden form input or the `X-CSRF-TOKEN` header
+The token is validated when a request is received
+Each token can be used only once
 
 ---
 
-# Generate Token
+## Generating a Token
 
-```php
+```php id="h14i9k"
 $csrf = new CSRF();
 
 $token = $csrf->generate();
 ```
 
-Token otomatis disimpan di session.
+The token is automatically stored in the session.
 
 ---
 
-# Menyisipkan Token ke Form
+## Injecting the Token into a Form
 
-Cara paling mudah:
+The simplest way to include the token in a form
 
-```php
+```php id="xsvx9u"
 <?= (new \Caracal\Core\CSRF())->inputField(); ?>
 ```
 
-Output:
+Output
 
-```html
+```html id="shak20"
 <input type="hidden" name="_csrf" value="TOKEN">
 ```
 
 ---
 
-# Contoh Form
+## Example Form
 
-```php
+```php id="18o0sx"
 <form method="POST" action="/submit">
 
     <?= (new \Caracal\Core\CSRF())->inputField(); ?>
@@ -84,9 +68,9 @@ Output:
 
 ---
 
-# Validasi Token Manual
+## Manual Token Validation
 
-```php
+```php id="h1jdtl"
 $csrf = new CSRF();
 
 $token = $_POST['_csrf'] ?? null;
@@ -98,15 +82,15 @@ if (!$csrf->validate($token)) {
 
 ---
 
-# Validasi POST Otomatis
+## Automatic POST Validation
 
-```php
+```php id="2l17s1"
 $csrf->checkPost();
 ```
 
-Contoh di controller:
+Example inside a controller
 
-```php
+```php id="t0k3h5"
 public function store()
 {
     $csrf = new CSRF();
@@ -115,23 +99,23 @@ public function store()
         die('CSRF validation failed');
     }
 
-    // lanjut proses
+    // continue processing
 }
 ```
 
 ---
 
-# Validasi AJAX / API
+## AJAX or API Validation
 
-Gunakan header:
+Send the token through the following header.
 
-```
+```id="6lt91y"
 X-CSRF-TOKEN
 ```
 
-Contoh JavaScript:
+JavaScript example
 
-```javascript
+```javascript id="gaxww3"
 fetch('/api/post', {
   method: 'POST',
   headers: {
@@ -140,9 +124,9 @@ fetch('/api/post', {
 });
 ```
 
-Validasi di server:
+Server validation
 
-```php
+```php id="2de1m7"
 $csrf = new CSRF();
 
 if (!$csrf->checkHeader()) {
@@ -152,17 +136,17 @@ if (!$csrf->checkHeader()) {
 
 ---
 
-# Mengambil Token Manual
+## Retrieving the Token Manually
 
-Jika ingin inject ke JS:
+If the token needs to be injected into JavaScript
 
-```php
+```php id="d0aw13"
 $token = (new CSRF())->token();
 ```
 
-Contoh:
+Example
 
-```php
+```php id="86r9mp"
 <script>
 const csrf = "<?= (new CSRF())->token() ?>";
 </script>
@@ -170,35 +154,36 @@ const csrf = "<?= (new CSRF())->token() ?>";
 
 ---
 
-# Menghapus Semua Token
+## Clearing All Tokens
 
-```php
+```php id="93d6pl"
 $csrf->clear();
 ```
 
-Session CSRF akan dibersihkan.
+All CSRF tokens stored in the session will be removed.
 
 ---
 
-# Perilaku Keamanan
+## Security Behavior
 
-Token memiliki fitur berikut:
+CSRF tokens include the following security characteristics.
 
-* berbasis `random_bytes`
-* disimpan di session
-* **single-use**
-* memiliki **TTL (30 menit)**
-* mendukung **multi form token**
+Generated using `random_bytes`
+Stored in the session
+Single-use tokens
+Token expiration with a TTL of approximately 30 minutes
+Support for multiple tokens for different forms
 
 ---
 
-# Ringkasan Method
+## Method Summary
 
-Method | Fungsi
-generate() | membuat token
-token() | alias generate
-inputField() | membuat hidden input
-validate() | memvalidasi token
-checkPost() | validasi POST
-checkHeader() | validasi header AJAX
-clear() | menghapus semua token
+| Method        | Description                   |
+| ------------- | ----------------------------- |
+| generate()    | Generate a CSRF token         |
+| token()       | Alias of generate             |
+| inputField()  | Generate a hidden input field |
+| validate()    | Validate a CSRF token         |
+| checkPost()   | Validate POST requests        |
+| checkHeader() | Validate AJAX header tokens   |
+| clear()       | Remove all stored tokens      |

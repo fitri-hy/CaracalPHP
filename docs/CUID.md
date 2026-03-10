@@ -1,43 +1,44 @@
 # CaracalPHP – CUID Usage Documentation
 
-`Caracal\Core\CUID` adalah generator **cluster-safe unique ID** untuk aplikasi Caracal.
+Class
 
-Dirancang untuk:
+```php
+Caracal\Core\CUID
+```
 
-* distributed systems
-* high concurrency
-* database indexing
-* microservices tracing
+`CUID` is a cluster-safe unique ID generator designed for Caracal applications.
 
-CUID menghasilkan **16 byte binary ID** yang dapat diubah menjadi **Base62 string**.
+It is intended for use in distributed systems, high concurrency environments, database indexing, and microservice tracing.
+
+The generator produces a **16-byte binary ID** that can be encoded into a **Base62 string**.
 
 ---
 
-# Cara Kerja
+## CUID Structure
 
-Struktur CUID:
+The generated identifier consists of the following structure.
 
 ```
-Timestamp  (8 byte)
+Timestamp  (8 bytes)
 Datacenter (1 byte)
 Worker     (1 byte)
-Sequence   (2 byte)
-Entropy    (4 byte)
+Sequence   (2 bytes)
+Entropy    (4 bytes)
 ```
 
-Total:
+Total size
 
 ```
-16 byte
+16 bytes
 ```
 
-Kemudian di-encode menjadi Base62 string.
+The binary value is then encoded into a Base62 string representation.
 
 ---
 
-# Konfigurasi Node
+## Node Configuration
 
-Setiap server harus memiliki identitas.
+Each server should have a unique node identity.
 
 ```php
 use Caracal\Core\CUID;
@@ -45,22 +46,24 @@ use Caracal\Core\CUID;
 CUID::configure(1, 9);
 ```
 
-Parameter:
+Parameters
 
 ```
-datacenter 0-255
-worker     0-255
+datacenter 0–255
+worker     0–255
 ```
+
+This ensures that generated IDs remain unique across distributed environments.
 
 ---
 
-# Generate ID
+## Generating an ID
 
 ```php
 $id = CUID::id();
 ```
 
-Contoh output:
+Example output
 
 ```
 7JYYB0wlaiUDDnBaGux
@@ -68,27 +71,27 @@ Contoh output:
 
 ---
 
-# Generate Binary
+## Generating Binary IDs
 
 ```php
 $binary = CUID::binary();
 ```
 
-Convert kembali:
+Convert the binary ID back to a string identifier
 
-```
+```php
 $id = CUID::fromBinary($binary);
 ```
 
 ---
 
-# Decode ID
+## Decoding an ID
 
 ```php
 $data = CUID::decodeId($id);
 ```
 
-Output:
+Example output
 
 ```php
 [
@@ -103,23 +106,23 @@ Output:
 
 ---
 
-# Ambil Timestamp
+## Retrieving the Timestamp
 
-```
+```php
 $timestamp = CUID::timestampFromId($id);
 ```
 
-Timestamp dalam **microsecond**.
+The timestamp is returned in **microseconds**.
 
 ---
 
-# Convert ke Datetime
+## Converting to Datetime
 
-```
+```php
 $datetime = CUID::datetime($binary);
 ```
 
-Contoh:
+Example output
 
 ```
 2026-03-05 08:04:33.843050
@@ -127,13 +130,15 @@ Contoh:
 
 ---
 
-# UUID Compatibility
+## UUID Compatibility
 
-```
+A CUID binary value can also be converted into a UUID format.
+
+```php
 $uuid = CUID::uuid($binary);
 ```
 
-Contoh:
+Example output
 
 ```
 00004218-6ce8-c78a-0109-0000713e62a7
@@ -141,27 +146,23 @@ Contoh:
 
 ---
 
-# Sharding Helper
+## Sharding Helper
 
-```
+```php
 $shard = CUID::shard($id, 32);
 ```
 
-Digunakan untuk:
-
-* database sharding
-* partition table
-* distributed storage
+This method can be used for database sharding, partitioned tables, or distributed storage strategies.
 
 ---
 
-# Node Information
+## Node Information
 
-```
+```php
 CUID::node();
 ```
 
-Output:
+Example output
 
 ```php
 [
@@ -172,13 +173,13 @@ Output:
 
 ---
 
-# Benchmark
+## Benchmark
 
-```
+```php
 echo CUID::benchmark(10000);
 ```
 
-Contoh:
+Example result
 
 ```
 12.4 ms (10000 IDs)
@@ -186,36 +187,18 @@ Contoh:
 
 ---
 
-# Database Recommendation
+## Database Recommendations
 
-## String
+### String Storage
 
 ```
 id VARCHAR(24)
 ```
 
-## Binary (Recommended)
+### Binary Storage (Recommended)
 
 ```
 id BINARY(16)
 ```
 
-Binary indexing jauh lebih cepat.
-
----
-
-# Best Practice
-
-Gunakan untuk:
-
-* Order ID
-* Invoice ID
-* Transaction ID
-* Distributed logging
-* API request tracing
-
-Jangan gunakan untuk:
-
-* password reset token
-* authentication token
-* cryptographic secrets
+Binary indexing generally provides significantly better performance for large datasets.

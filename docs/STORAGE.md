@@ -1,23 +1,29 @@
-# 📘 CaracalPHP – Storage Documentation
+# CaracalPHP – Storage Documentation
 
-## Overview
+Class:
 
-`Caracal\Core\Storage` adalah **abstraksi penyimpanan file privat** untuk CaracalPHP.
-Dirancang untuk menyimpan **file internal modul**, **upload**, atau konten yang tidak langsung diakses publik.
+```php
+Caracal\Core\Storage
+```
 
-**Fitur utama:**
+`Storage` is a **private file storage abstraction** for CaracalPHP.
+It is designed to store **internal module files**, **uploads**, or content that is not publicly accessible.
 
-* Membaca dan menulis file dengan path terkelola
-* Mengecek keberadaan file
-* Menghapus file
-* Membuat direktori otomatis
-* Mendukung base path kustom
-* Mendukung **driver storage** dari `.env` (`local` saat ini)
-* Membatasi **ukuran upload** sesuai `UPLOAD_MAX_SIZE`
+Key features:
 
-> Default base path: `storage/uploads`
-> Default driver: `local`
-> Default upload max size: `5M`
+* Read and write files with managed paths
+* Check file existence
+* Delete files
+* Automatically create directories
+* Support custom base paths
+* Support **storage drivers** from `.env` (currently `local`)
+* Limit **upload size** according to `UPLOAD_MAX_SIZE`
+
+Defaults:
+
+* Base path: `storage/uploads`
+* Driver: `local`
+* Upload max size: `5M`
 
 ---
 
@@ -39,13 +45,13 @@ echo $storage->path('example.txt');
 $storage = new Storage(__DIR__.'/../storage/private_files');
 ```
 
-> Storage otomatis membuat direktori jika belum ada.
+> Storage will automatically create the directory if it does not exist.
 
 ---
 
 ## Storage Driver & Max Upload
 
-Driver dan batas ukuran otomatis dibaca dari `.env`:
+Driver and upload size are read from `.env`:
 
 ```env
 FILESYSTEM_DRIVER=local
@@ -56,50 +62,50 @@ UPLOAD_MAX_SIZE=5M
 $storage = new Storage();
 ```
 
-* `$storage` akan menggunakan **driver lokal**.
-* File yang melebihi `UPLOAD_MAX_SIZE` akan **menghasilkan exception** saat `put()`.
+* Uses **local driver** by default
+* Files exceeding `UPLOAD_MAX_SIZE` will **throw an exception** when using `put()`
 
 ---
 
 ## Basic File Operations
 
-### Put / Write File
+### Write File (`put`)
 
 ```php
 $storage->put('docs/readme.txt', 'Hello CaracalPHP!');
 ```
 
-* Membuat file `readme.txt` di `storage/uploads/docs/`
-* Direktori dibuat otomatis jika belum ada
-* Memeriksa ukuran file sesuai `UPLOAD_MAX_SIZE`
-* Mengembalikan `true` jika berhasil
+* Creates `readme.txt` in `storage/uploads/docs/`
+* Automatically creates directories if missing
+* Checks file size according to `UPLOAD_MAX_SIZE`
+* Returns `true` if successful
 
 ---
 
-### Get / Read File
+### Read File (`get`)
 
 ```php
 $content = $storage->get('docs/readme.txt');
 echo $content; // Hello CaracalPHP!
 ```
 
-* Jika file tidak ada → mengembalikan `null`
+* Returns `null` if the file does not exist
 
 ---
 
-### Delete File
+### Delete File (`delete`)
 
 ```php
 $storage->delete('docs/readme.txt');
 ```
 
-* Menghapus file
-* Mengembalikan `true` jika file ada dan berhasil dihapus
-* `false` jika file tidak ada
+* Deletes the file
+* Returns `true` if file existed and was deleted
+* Returns `false` if file did not exist
 
 ---
 
-### Check File Existence
+### Check File Existence (`exists`)
 
 ```php
 if ($storage->exists('docs/readme.txt')) {
@@ -109,7 +115,7 @@ if ($storage->exists('docs/readme.txt')) {
 
 ---
 
-### Get Full Path
+### Get Full Path (`path`)
 
 ```php
 $fullPath = $storage->path('docs/readme.txt');
@@ -119,14 +125,14 @@ echo $fullPath;
 
 ---
 
-### Create Directory
+### Create Directory (`makeDir`)
 
 ```php
 $storage->makeDir('images/users');
 ```
 
-* Membuat direktori baru di bawah **base path**
-* Mengembalikan `true` jika berhasil atau sudah ada
+* Creates a new directory under the **base path**
+* Returns `true` if successful or already exists
 
 ---
 
@@ -135,18 +141,18 @@ $storage->makeDir('images/users');
 ```php
 $storage = new \Caracal\Core\Storage();
 
-// Simpan avatar user
+// Save user avatar
 $storage->put('users/123/avatar.png', $imageContent);
 
-// Cek apakah file ada
+// Check if file exists
 if ($storage->exists('users/123/avatar.png')) {
-    echo "Avatar siap diakses melalui backend!";
+    echo "Avatar ready for backend access!";
 }
 
-// Ambil konten
+// Retrieve file content
 $content = $storage->get('users/123/avatar.png');
 
-// Hapus file
+// Delete file
 $storage->delete('users/123/avatar.png');
 ```
 
@@ -154,9 +160,9 @@ $storage->delete('users/123/avatar.png');
 
 ## Notes
 
-* Semua operasi **privat**, tidak untuk publik (gunakan folder `public/uploads` untuk user uploads publik)
-* Path internal dikelola **relatif terhadap base path**
-* Otomatis membuat folder yang hilang saat `put()` atau `makeDir()`
-* Bisa digunakan oleh **modul** atau **plugin** untuk penyimpanan internal
-* **Driver** dan **upload max size** dikonfigurasi melalui `.env` (`FILESYSTEM_DRIVER` & `UPLOAD_MAX_SIZE`)
-* Saat menggunakan driver selain `local`, class akan menolak jika belum diimplementasikan
+* All operations are **private**; not for public access (use `public/uploads` for user-accessible uploads)
+* Paths are managed **relative to the base path**
+* Missing directories are automatically created during `put()` or `makeDir()`
+* Can be used by **modules** or **plugins** for internal storage
+* **Driver** and **upload max size** are configured via `.env` (`FILESYSTEM_DRIVER` & `UPLOAD_MAX_SIZE`)
+* Other drivers are rejected if not implemented

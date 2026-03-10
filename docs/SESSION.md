@@ -1,22 +1,26 @@
-CaracalPHP – Session Documentation
+# CaracalPHP – Session Documentation
 
-## Overview
+Class:
 
-`Caracal\Core\Session` adalah **session engine aman dan fleksibel** untuk CaracalPHP.
+```php
+Caracal\Core\Session
+```
 
-Session ini dirancang untuk:
+`Session` is a **secure and flexible session engine** for CaracalPHP.
 
-* Aman untuk production
-* Mendukung **multi-driver storage**
-* Menggunakan **enkripsi AES-256**
-* Mendukung **flash message**
-* Mendukung **lazy session start** (session hanya dibuat saat dipakai)
+It is designed to:
 
-Semua data session disimpan dalam kondisi **terenkripsi dan HMAC-signed**, sehingga tidak dapat dimanipulasi.
+* Be production-safe
+* Support **multi-driver storage**
+* Use **AES-256 encryption**
+* Support **flash messages**
+* Support **lazy session start** (sessions only start when used)
+
+All session data is **encrypted and HMAC-signed**, preventing tampering.
 
 ---
 
-# Features
+Features:
 
 | Feature              | Status |
 | -------------------- | ------ |
@@ -31,19 +35,17 @@ Semua data session disimpan dalam kondisi **terenkripsi dan HMAC-signed**, sehin
 
 ---
 
-# Supported Drivers
+Supported Drivers:
 
-Session dapat menggunakan beberapa storage backend.
-
-| Driver     | Description                             |
-| ---------- | --------------------------------------- |
-| `file`     | Default, disimpan di `storage/sessions` |
-| `redis`    | Disimpan di Redis server                |
-| `database` | Disimpan di tabel `sessions`            |
+| Driver     | Description                           |
+| ---------- | ------------------------------------- |
+| `file`     | Default, stored in `storage/sessions` |
+| `redis`    | Stored in Redis server                |
+| `database` | Stored in `sessions` table            |
 
 ---
 
-# Configuration (.env)
+Configuration (.env):
 
 ```dotenv
 SESSION_DRIVER=file
@@ -53,20 +55,18 @@ SESSION_COOKIE=caracal_session
 APP_KEY=your-secret-key
 ```
 
-Penjelasan:
+Explanation:
 
-| Variable         | Description                  |
-| ---------------- | ---------------------------- |
-| SESSION_DRIVER   | file / redis / database      |
-| SESSION_LIFETIME | lifetime session dalam detik |
-| SESSION_COOKIE   | nama cookie session          |
-| APP_KEY          | key enkripsi session         |
+| Variable         | Description                 |
+| ---------------- | --------------------------- |
+| SESSION_DRIVER   | file / redis / database     |
+| SESSION_LIFETIME | Session lifetime in seconds |
+| SESSION_COOKIE   | Name of the session cookie  |
+| APP_KEY          | Session encryption key      |
 
 ---
 
-# Initialization
-
-Session otomatis diinisialisasi saat class dipanggil.
+Initialization:
 
 ```php
 use Caracal\Core\Session;
@@ -74,46 +74,37 @@ use Caracal\Core\Session;
 $session = new Session();
 ```
 
-⚠ Tidak perlu memanggil `session_start()`.
+> No need to call `session_start()`.
 
-Session menggunakan **lazy start**, artinya session baru dimulai ketika:
+Sessions use **lazy start**, which means a session begins only when calling:
 
 ```
-set()
-get()
-flash()
-id()
+set(), get(), flash(), id()
 ```
-
-dipanggil.
 
 ---
 
-# Basic Usage
+Basic Usage:
 
-## Set Session Data
+Set session data:
 
 ```php
 $session->set('user_id', 123);
 ```
 
----
-
-## Get Session Data
+Get session data:
 
 ```php
 $userId = $session->get('user_id');
 ```
 
-Dengan default value:
+With default value:
 
 ```php
 $role = $session->get('role', 'guest');
 ```
 
----
-
-## Check Session Key
+Check if a key exists:
 
 ```php
 if ($session->has('user_id')) {
@@ -121,9 +112,7 @@ if ($session->has('user_id')) {
 }
 ```
 
----
-
-## Remove Session Data
+Remove session data:
 
 ```php
 $session->remove('user_id');
@@ -131,108 +120,78 @@ $session->remove('user_id');
 
 ---
 
-# Flash Message
+Flash Messages:
 
-Flash data adalah data yang hanya tersedia **untuk request berikutnya**.
+Flash data is available **for the next request only**.
 
-Biasanya digunakan untuk:
+Typically used for:
 
-* notifikasi sukses
-* pesan error
-* alert UI
+* Success notifications
+* Error messages
+* UI alerts
 
----
-
-## Set Flash
+Set flash data:
 
 ```php
 $session->flash('success', 'Data saved successfully');
 ```
 
----
-
-## Get Flash
+Get flash data:
 
 ```php
 $message = $session->flash('success');
 ```
 
-Setelah dibaca, flash akan otomatis dihapus.
-
-Lifecycle flash:
+Lifecycle:
 
 ```
 Request 1 -> set flash
-Request 2 -> flash tersedia
-Request 3 -> flash hilang
+Request 2 -> flash available
+Request 3 -> flash gone
 ```
 
 ---
 
-# Session ID
-
-Ambil session ID aktif:
+Session ID:
 
 ```php
 $id = $session->id();
 ```
 
----
-
-# Regenerate Session ID
-
-Digunakan untuk mencegah **session fixation attack**.
-
-Contoh saat login:
+Regenerate session ID (prevents session fixation):
 
 ```php
 $session->regenerate();
 ```
 
----
-
-# Retrieve All Session Data
+Retrieve all session data:
 
 ```php
 $data = $session->all();
 ```
 
-Return:
+Returns all session data (flash excluded). All data is automatically decrypted.
 
-```
-array semua session (flash tidak disertakan)
-```
-
-Semua data otomatis **didekripsi**.
-
----
-
-# Clear Session
-
-Menghapus seluruh session:
+Clear session:
 
 ```php
 $session->clear();
 ```
 
-Ini akan:
-
-* menghapus data session
-* menghancurkan session ID
-* menghapus cookie session
+Removes session data, destroys the session ID, and deletes the session cookie.
 
 ---
 
-# Encryption
+Encryption:
 
-Semua session data menggunakan:
+All session data uses:
 
 ```
 AES-256-CBC encryption
 HMAC-SHA256 signing
 ```
 
-Struktur payload:
+Payload structure:
 
 ```
 base64(
@@ -242,59 +201,49 @@ base64(
 )
 ```
 
-Keuntungan:
+Benefits:
 
-* data tidak bisa dibaca langsung
-* data tidak bisa dimodifikasi
-* integritas payload terjamin
+* Cannot be read directly
+* Cannot be modified
+* Integrity guaranteed
 
-Jika payload rusak:
+If the payload is corrupted:
 
 ```
-get() akan mengembalikan default value
+get() will return the default value
 ```
 
 ---
 
-# Redis Session Driver
-
-Jika menggunakan Redis:
+Redis Driver:
 
 ```dotenv
 SESSION_DRIVER=redis
 ```
 
-Session disimpan dengan format key:
+Stored as:
 
 ```
 caracal_session:{session_id}
 ```
 
-Contoh:
+Example:
 
 ```
 caracal_session:2f1d8a73a9e5c1
 ```
 
-⚠ Redis tidak menggunakan `flushdb()`, sehingga aman untuk multi aplikasi.
+> Redis does **not** use `flushdb()`, safe for multi-application usage.
 
 ---
 
-# Database Session Driver
-
-Jika menggunakan database:
+Database Driver:
 
 ```dotenv
 SESSION_DRIVER=database
 ```
 
-Caracal akan otomatis membuat tabel:
-
-```sql
-sessions
-```
-
-Schema:
+Automatically creates `sessions` table:
 
 ```sql
 id VARCHAR PRIMARY KEY
@@ -302,63 +251,49 @@ payload TEXT
 expires INT
 ```
 
-Session akan otomatis dihapus oleh **garbage collector** saat expired.
+Expired sessions are automatically deleted by garbage collection.
 
 ---
 
-# File Session Driver
+File Driver (Default):
 
-Default driver.
-
-Lokasi penyimpanan:
+Stored in:
 
 ```
 storage/sessions
 ```
 
-Setiap session disimpan sebagai file.
+Suitable for:
 
-Cocok untuk:
-
-* development
-* small applications
-* single server deployment
+* Development
+* Small applications
+* Single server deployment
 
 ---
 
-# Security
-
-Caracal Session memiliki beberapa fitur keamanan:
+Security:
 
 ### Encryption
 
-Semua data session terenkripsi menggunakan:
+All session data is encrypted using:
 
 ```
 AES-256-CBC
 ```
 
----
-
 ### HMAC Verification
 
-Payload ditandatangani menggunakan:
+Payload is signed using:
 
 ```
 HMAC-SHA256
 ```
 
-Jika payload dimodifikasi:
+Tampered payloads will fail decryption.
 
-```
-decrypt() akan gagal
-```
+### Secure Cookies
 
----
-
-### Secure Cookie
-
-Session cookie menggunakan default:
+Default cookie settings:
 
 ```
 HttpOnly
@@ -366,15 +301,13 @@ SameSite=Lax
 Secure (HTTPS)
 ```
 
-Sehingga:
-
-* tidak bisa diakses JavaScript
-* terlindung dari CSRF sebagian
-* aman di HTTPS
+* Not accessible via JavaScript
+* Partially protected from CSRF
+* Secure over HTTPS
 
 ---
 
-# Example: Login Flow
+Example: Login Flow
 
 ```php
 $session = new \Caracal\Core\Session();
@@ -393,7 +326,7 @@ header('Location: /dashboard');
 exit;
 ```
 
-Di halaman dashboard:
+On dashboard:
 
 ```php
 $session = new Session();
@@ -405,24 +338,7 @@ if ($msg = $session->flash('success')) {
 
 ---
 
-# Best Practice
-
-Gunakan session untuk:
-
-* authentication state
-* flash message
-* CSRF token
-* user preference
-
-Jangan gunakan session untuk:
-
-* menyimpan file besar
-* menyimpan data sensitif tanpa enkripsi tambahan
-* menyimpan cache
-
----
-
-# Summary
+Summary:
 
 | Capability           | Supported |
 | -------------------- | --------- |

@@ -1,4 +1,4 @@
-# 📘 CaracalPHP – Module Documentation
+# CaracalPHP – Module Documentation
 
 Class:
 
@@ -6,33 +6,33 @@ Class:
 Caracal\Core\Module
 ```
 
-`Module` adalah registry sederhana untuk menyimpan daftar module yang tersedia dalam aplikasi.
+`Module` is a simple registry used to store a list of modules available in the application.
 
-Class ini hanya bertanggung jawab untuk:
+This class is responsible only for:
 
-* Mendaftarkan module
-* Menyimpan path module
-* Mengembalikan daftar module
+* Registering modules
+* Storing module paths
+* Returning the list of registered modules
 
-Tidak ada auto-loading atau auto-discovery di dalam class ini.
-
----
-
-# 🎯 Tujuan Module
-
-* Mengelola daftar module secara terpusat
-* Memastikan path module valid
-* Menyediakan akses ke seluruh module terdaftar
+It does **not** handle auto-loading or auto-discovery.
 
 ---
 
-# 1️⃣ Properti
+Purpose of the Module:
+
+* Manage the list of modules centrally
+* Ensure module paths are valid
+* Provide access to all registered modules
+
+---
+
+Properties:
 
 ```php
 protected array $modules = [];
 ```
 
-Struktur data:
+Data structure:
 
 ```php
 [
@@ -42,17 +42,17 @@ Struktur data:
 
 ---
 
-# 2️⃣ Method register()
+Method `register`:
 
 ```php
 public function register(string $name, string $path): void
 ```
 
-Digunakan untuk mendaftarkan module baru.
+Used to register a new module.
 
 ---
 
-## Validasi Internal
+Internal validation:
 
 ```php
 if (!is_dir($path)) {
@@ -60,15 +60,15 @@ if (!is_dir($path)) {
 }
 ```
 
-Artinya:
+Explanation:
 
-* Path harus berupa direktori
-* Jika tidak ada → akan melempar Exception
-* Tidak ada silent fail
+* The path must be a directory
+* If the directory does not exist → an Exception is thrown
+* No silent failure occurs
 
 ---
 
-## Contoh Penggunaan
+Example usage:
 
 ```php
 use Caracal\Core\Module;
@@ -81,7 +81,7 @@ $module->register(
 );
 ```
 
-Jika folder tidak ada:
+If the folder does not exist:
 
 ```text
 Exception: Module path /app/Modules/User not found
@@ -89,17 +89,17 @@ Exception: Module path /app/Modules/User not found
 
 ---
 
-# 3️⃣ Method all()
+Method `all`:
 
 ```php
 public function all(): array
 ```
 
-Mengembalikan seluruh module yang sudah didaftarkan.
+Returns all registered modules.
 
 ---
 
-## Contoh
+Example:
 
 ```php
 $modules = $module->all();

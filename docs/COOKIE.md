@@ -1,26 +1,26 @@
-# CaracalPHP – Cookie Usage Documentation
+# CaracalPHP – Cookie Documentation
 
-Class:
+Class
 
-```
+```php
 Caracal\Core\Cookie
 ```
 
-Cookie menyediakan utilitas untuk mengelola HTTP cookie dalam aplikasi Caracal.
+`Cookie` provides utilities for managing HTTP cookies within a Caracal application.
 
-Semua method bersifat **static**.
+All methods are static.
 
 ---
 
-# Membuat Cookie
+## Creating a Cookie
 
-Gunakan method:
+Use the following method.
 
 ```
 Cookie::set()
 ```
 
-Signature:
+Signature
 
 ```
 set(
@@ -37,17 +37,17 @@ set(
 
 ---
 
-# Contoh Dasar
+## Basic Example
 
 ```
 Cookie::set('username', 'john', 120);
 ```
 
-Cookie berlaku selama **120 menit**.
+The cookie will be valid for **120 minutes**.
 
 ---
 
-# Menyimpan Array / Object
+## Storing Arrays or Objects
 
 ```
 Cookie::set('user', [
@@ -56,33 +56,33 @@ Cookie::set('user', [
 ]);
 ```
 
-Data akan otomatis disimpan sebagai **JSON**.
+The data will automatically be stored as **JSON**.
 
 ---
 
-# Cookie Permanen
+## Permanent Cookie
 
 ```
 Cookie::forever('remember_token', 'abc123');
 ```
 
-Cookie berlaku sekitar **5 tahun**.
+This cookie will remain valid for approximately **five years**.
 
 ---
 
-# Mengambil Cookie
+## Retrieving a Cookie
 
 ```
 Cookie::get(string $name, mixed $default = null)
 ```
 
-Contoh:
+Example
 
 ```
 $username = Cookie::get('username');
 ```
 
-Dengan default:
+With a default value
 
 ```
 $username = Cookie::get('username', 'guest');
@@ -90,9 +90,9 @@ $username = Cookie::get('username', 'guest');
 
 ---
 
-# Pull Cookie
+## Pull Cookie
 
-Mengambil cookie lalu langsung menghapusnya.
+Retrieve a cookie and immediately delete it.
 
 ```
 $token = Cookie::pull('login_token');
@@ -100,13 +100,13 @@ $token = Cookie::pull('login_token');
 
 ---
 
-# Mengecek Cookie
+## Checking Cookie Existence
 
 ```
 Cookie::has('username');
 ```
 
-Return:
+Return value
 
 ```
 true / false
@@ -114,30 +114,30 @@ true / false
 
 ---
 
-# Menghapus Cookie
+## Deleting a Cookie
 
 ```
 Cookie::delete('username');
 ```
 
-Cookie akan:
+The cookie will be
 
-* expired
-* dihapus dari `$_COOKIE`
+Expired
+Removed from `$_COOKIE`
 
 ---
 
-# Menghapus Semua Cookie
+## Deleting All Cookies
 
 ```
 Cookie::clearAll();
 ```
 
-Semua cookie akan dihapus.
+All cookies will be removed.
 
 ---
 
-# Mengambil Semua Cookie
+## Retrieving All Cookies
 
 ```
 $cookies = Cookie::all();
@@ -145,25 +145,25 @@ $cookies = Cookie::all();
 
 ---
 
-# Default Security
+## Default Security Settings
 
-Secara default cookie memiliki:
+By default, cookies use the following security configuration.
 
 ```
 SameSite = Lax
 HttpOnly = true
-Secure   = auto jika HTTPS
+Secure   = automatic when using HTTPS
 ```
 
-Ini membantu melindungi dari:
+These settings help protect against
 
-* CSRF
-* XSS
-* cookie leakage
+CSRF
+XSS
+Cookie leakage
 
 ---
 
-# Contoh Penggunaan di Controller
+## Example Usage in a Controller
 
 ```
 use Caracal\Core\Controller;
@@ -189,14 +189,15 @@ class AuthController extends Controller
 
 ---
 
-# Ringkasan Method
+## Method Summary
 
-Method | Fungsi
-set() | membuat cookie
-get() | membaca cookie
-pull() | membaca lalu menghapus cookie
-forever() | cookie jangka sangat panjang
-has() | mengecek cookie
-delete() | menghapus cookie
-clearAll() | menghapus semua cookie
-all() | mengambil semua cookie
+| Method     | Description                  |
+| ---------- | ---------------------------- |
+| set()      | Create a cookie              |
+| get()      | Retrieve a cookie            |
+| pull()     | Retrieve and delete a cookie |
+| forever()  | Create a long-lived cookie   |
+| has()      | Check if a cookie exists     |
+| delete()   | Delete a cookie              |
+| clearAll() | Delete all cookies           |
+| all()      | Retrieve all cookies         |

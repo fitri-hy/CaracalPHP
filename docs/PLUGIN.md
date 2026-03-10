@@ -1,4 +1,4 @@
-# 📘 CaracalPHP – Plugin System Documentation
+# CaracalPHP – Plugin Documentation
 
 Class:
 
@@ -6,28 +6,28 @@ Class:
 Caracal\Core\Plugin
 ```
 
-`Plugin` adalah sistem extensibility utama di CaracalPHP.
+`Plugin` is the main extensibility system in CaracalPHP.
 
-Class ini bertanggung jawab untuk:
+This class is responsible for:
 
-* Load file plugin
-* Menjalankan lifecycle plugin
-* Mengelola service container sederhana
-* Menyediakan event hook system
-
----
-
-# 🎯 Tujuan Plugin System
-
-* Membuat framework extensible
-* Mendukung service registration
-* Mendukung singleton service
-* Mendukung event-driven hooks
-* Mendukung priority execution
+* Loading plugin files
+* Running plugin lifecycle
+* Managing a lightweight service container
+* Providing an event hook system
 
 ---
 
-# 1️⃣ Struktur Internal
+Purpose of the Plugin System:
+
+* Make the framework extensible
+* Support service registration
+* Support singleton services
+* Enable event-driven hooks
+* Support priority-based execution
+
+---
+
+Internal Structure:
 
 ```php
 protected array $plugins = [];
@@ -36,33 +36,31 @@ protected array $instances = [];
 protected array $hooks = [];
 ```
 
-Penjelasan:
+Explanation:
 
-| Property   | Fungsi                    |
+| Property   | Purpose                   |
 | ---------- | ------------------------- |
-| $plugins   | Menyimpan definisi plugin |
-| $services  | Registry service          |
-| $instances | Instance singleton        |
+| $plugins   | Stores plugin definitions |
+| $services  | Service registry          |
+| $instances | Singleton instances       |
 | $hooks     | Event hooks               |
 
 ---
 
-# 2️⃣ Format File Plugin
+Plugin File Format:
 
-File plugin harus:
+* Must be a PHP file
+* Must return an array
+* Can return an empty array at minimum
 
-* Berupa file PHP
-* Return array
-* Minimal return array kosong
-
-Contoh:
+Example:
 
 ```php
 return [
     'priority' => 10,
 
     'register' => function($plugin) {
-        // register service
+        // register services
     },
 
     'boot' => function($plugin) {
@@ -77,26 +75,24 @@ return [
 
 ---
 
-# 3️⃣ Method load()
+Method `load`:
 
 ```php
 public function load(string $path): void
 ```
 
-Fungsi:
+Function:
 
-* Include file plugin
-* Validasi file ada
-* Validasi return berupa array
-* Simpan ke $plugins
+* Include the plugin file
+* Validate file existence
+* Validate that it returns an array
+* Store in `$plugins`
 
-Jika file tidak ada:
+Throws:
 
 ```php
 throw new \Exception("Plugin file {$path} not found");
 ```
-
-Jika tidak return array:
 
 ```php
 throw new \Exception("Plugin file must return an array");
@@ -104,70 +100,68 @@ throw new \Exception("Plugin file must return an array");
 
 ---
 
-# 4️⃣ Method run()
+Method `run`:
 
 ```php
 public function run(): void
 ```
 
-Menjalankan lifecycle plugin.
+Executes the plugin lifecycle.
 
 ---
 
-## Step 1 – Urutkan Berdasarkan Priority
+Step 1 – Sort by Priority:
 
 ```php
 usort(...);
 ```
 
-Semakin besar priority → dijalankan lebih dulu.
-
-Default priority = 0.
+Higher priority plugins run first. Default priority is 0.
 
 ---
 
-## Step 2 – Jalankan register()
+Step 2 – Run `register()`:
 
-Semua plugin dipanggil bagian register dulu.
+All plugins call the `register` function first:
 
 ```php
 $plugin['register']($this);
 ```
 
-Digunakan untuk:
+Used to:
 
-* Register service
-* Register singleton
-* Register hook
-
----
-
-## Step 3 – Jalankan boot() dan callback()
-
-Setelah semua register selesai:
-
-* boot()
-* callback()
-
-Dieksekusi sesuai urutan priority.
+* Register services
+* Register singletons
+* Register hooks
 
 ---
 
-# 5️⃣ Service Container
+Step 3 – Run `boot()` and `callback()`:
 
-Plugin berfungsi sebagai service container ringan.
+After all `register()` executions:
+
+* `boot()`
+* `callback()`
+
+Executed in priority order.
 
 ---
 
-## set()
+Service Container:
+
+The plugin system acts as a lightweight service container.
+
+---
+
+Method `set`:
 
 ```php
 public function set(string $name, $service): void
 ```
 
-Menyimpan service biasa.
+Stores a normal service.
 
-Contoh:
+Example:
 
 ```php
 $plugin->set('logger', new Logger());
@@ -175,15 +169,15 @@ $plugin->set('logger', new Logger());
 
 ---
 
-## singleton()
+Method `singleton`:
 
 ```php
 public function singleton(string $name, callable $factory): void
 ```
 
-Menyimpan factory dan instance akan dibuat sekali.
+Stores a factory; instance is created once.
 
-Contoh:
+Example:
 
 ```php
 $plugin->singleton('mailer', function($plugin) {
@@ -193,38 +187,36 @@ $plugin->singleton('mailer', function($plugin) {
 
 ---
 
-## get()
+Method `get`:
 
 ```php
 public function get(string $name)
 ```
 
-Mengambil service.
+Retrieves a service. Behavior:
 
-Perilaku:
-
-1. Jika tidak ada → return null
-2. Jika singleton → buat instance sekali
-3. Jika callable → jalankan dan return
-4. Jika object biasa → return langsung
+* If service does not exist → returns `null`
+* If singleton → instance is created once
+* If callable → executed and returned
+* If regular object → returned directly
 
 ---
 
-# 6️⃣ Event Hook System
+Event Hook System:
 
-Plugin memiliki sistem event internal.
+Plugins have an internal event system.
 
 ---
 
-## on()
+Method `on`:
 
 ```php
 public function on(string $event, callable $callback): void
 ```
 
-Register event listener.
+Registers an event listener.
 
-Contoh:
+Example:
 
 ```php
 $plugin->on('before_request', function() {
@@ -234,15 +226,15 @@ $plugin->on('before_request', function() {
 
 ---
 
-## trigger()
+Method `trigger`:
 
 ```php
 public function trigger(string $event, ...$params): void
 ```
 
-Menjalankan semua callback event tersebut.
+Executes all callbacks for the event.
 
-Contoh:
+Example:
 
 ```php
 $plugin->trigger('before_request');
@@ -250,32 +242,32 @@ $plugin->trigger('before_request');
 
 ---
 
-# 📌 Integrasi dengan Kernel
+Integration with Kernel:
 
-Kernel memanggil event berikut:
+The kernel triggers these events:
 
-* before_request
-* before_dispatch
-* after_dispatch
-* response_ready
-* on_error
-* after_response
+* `before_request`
+* `before_dispatch`
+* `after_dispatch`
+* `response_ready`
+* `on_error`
+* `after_response`
 
-Artinya plugin bisa hook ke seluruh lifecycle request.
+Plugins can hook into the entire request lifecycle.
 
 ---
 
-# 7️⃣ Method all()
+Method `all`:
 
 ```php
 public function all(): array
 ```
 
-Mengembalikan seluruh plugin yang sudah diload.
+Returns all loaded plugins.
 
 ---
 
-# 📌 Contoh Plugin Lengkap
+Complete Plugin Example:
 
 ```php
 return [

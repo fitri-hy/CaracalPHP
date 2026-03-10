@@ -1,33 +1,29 @@
-# 📘 CaracalPHP – Sanitizer Usage Documentation
+# CaracalPHP – Sanitizer Documentation
 
-`Caracal\Core\Sanitizer` digunakan untuk membersihkan input HTML agar aman dari serangan seperti **XSS (Cross-Site Scripting)**.
-
-Sanitizer menggunakan **HTMLPurifier** untuk memastikan output aman tanpa merusak struktur HTML yang valid.
-
----
-
-# 1. Class Location
+Class:
 
 ```php
 Caracal\Core\Sanitizer
 ```
 
----
+`Sanitizer` is used to clean HTML input to protect against attacks like **XSS (Cross-Site Scripting)**.
 
-# 2. Tujuan Sanitizer
-
-Sanitizer digunakan untuk:
-
-* Membersihkan input dari user
-* Mengamankan rich text editor
-* Mengizinkan iframe hanya dari domain tertentu
-* Membersihkan array input (misalnya $_POST)
+It uses **HTMLPurifier** to ensure the output is safe while preserving valid HTML structure.
 
 ---
 
-# 3. Basic Usage
+Purpose of Sanitizer:
 
-## Membersihkan String
+* Clean user input
+* Secure rich text editors
+* Allow iframes only from whitelisted domains
+* Clean array input, e.g., `$_POST`
+
+---
+
+Basic Usage:
+
+Clean a string:
 
 ```php
 use Caracal\Core\Sanitizer;
@@ -37,29 +33,29 @@ $sanitizer = new Sanitizer();
 $clean = $sanitizer->clean($input);
 ```
 
-Metode:
+Method:
 
 ```php
 public function clean(string $input): string
 ```
 
-Fungsi ini akan:
+Behavior:
 
-* Menghapus script berbahaya
-* Menghapus atribut berbahaya
-* Memastikan HTML aman
+* Removes malicious scripts
+* Removes dangerous attributes
+* Ensures safe HTML output
 
 ---
 
-# 4. Membersihkan Array Input
+Cleaning Array Input:
 
-Jika Anda memiliki input dalam bentuk array:
+If input is in an array:
 
 ```php
 $cleanData = $sanitizer->cleanArray($_POST);
 ```
 
-Metode:
+Method:
 
 ```php
 public function cleanArray(array $data): array
@@ -67,11 +63,11 @@ public function cleanArray(array $data): array
 
 Behavior:
 
-* Setiap value string akan dibersihkan
-* Value non-string akan dibiarkan
-* Tidak melakukan recursive nested array (sesuai implementasi saat ini)
+* Cleans every string value
+* Leaves non-string values untouched
+* Does **not** recursively clean nested arrays (as currently implemented)
 
-Contoh:
+Example:
 
 Input:
 
@@ -93,10 +89,9 @@ Output:
 
 ---
 
-# 5. Mengizinkan Iframe Domain Tertentu
+Allowing Specific Iframe Domains:
 
-Secara default iframe dibatasi.
-Anda dapat mengizinkan domain tertentu melalui constructor.
+By default, iframes are restricted. You can allow specific domains via the constructor:
 
 ```php
 $sanitizer = new Sanitizer([
@@ -105,35 +100,33 @@ $sanitizer = new Sanitizer([
 ]);
 ```
 
-Sanitizer akan mengizinkan iframe hanya dari domain tersebut.
-
-Contoh input:
+Example input:
 
 ```html
 <iframe src="https://www.youtube.com/embed/xxxx"></iframe>
 ```
 
-Jika domain tidak diizinkan → iframe akan dihapus.
+If the domain is not allowed → the iframe will be removed.
 
 ---
 
-# 6. Constructor Signature
+Constructor Signature:
 
 ```php
 public function __construct(array $allowedIframeDomains = [])
 ```
 
-Parameter:
+Parameters:
 
-| Parameter            | Tipe  | Deskripsi                           |
-| -------------------- | ----- | ----------------------------------- |
-| allowedIframeDomains | array | Daftar domain iframe yang diizinkan |
+| Parameter            | Type  | Description                    |
+| -------------------- | ----- | ------------------------------ |
+| allowedIframeDomains | array | List of allowed iframe domains |
 
-Jika kosong → iframe tetap dalam mode safe, tetapi tanpa whitelist domain tambahan.
+If empty → iframes remain in safe mode without additional whitelist domains.
 
 ---
 
-# 7. Contoh Penggunaan di Controller
+Controller Example:
 
 ```php
 use Caracal\Core\Sanitizer;
@@ -148,31 +141,29 @@ class PostController
 
         $data = $sanitizer->cleanArray($_POST);
 
-        // Simpan ke database
+        // Save to database
     }
 }
 ```
 
 ---
 
-# 8. Kapan Menggunakan Sanitizer
+When to Use Sanitizer:
 
-Gunakan ketika:
+* Storing user comments
+* Storing blog articles
+* Storing content from WYSIWYG editors
+* Receiving HTML from forms
 
-* Menyimpan komentar user
-* Menyimpan artikel blog
-* Menyimpan konten dari WYSIWYG editor
-* Menerima HTML dari form
+Do **not** use for:
 
-Tidak perlu digunakan untuk:
-
-* Data numerik
-* Data internal sistem
-* Data yang tidak berasal dari user
+* Numeric data
+* Internal system data
+* Non-user-provided input
 
 ---
 
-# 10. Ringkasan Fitur
+Feature Summary:
 
 | Feature                  | Status |
 | ------------------------ | ------ |

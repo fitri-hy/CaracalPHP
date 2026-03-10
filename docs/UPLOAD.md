@@ -1,28 +1,32 @@
-# 📘 CaracalPHP – Upload Documentation
+# CaracalPHP – Upload Documentation
 
-## Overview
+Class:
 
-`Caracal\Core\Upload` adalah **engine upload file profesional** untuk CaracalPHP yang mendukung:
+```php id="u7q2xp"
+Caracal\Core\Upload
+```
 
-* **Single & multiple file upload**
-* **Validasi ukuran file** (`UPLOAD_MAX_SIZE` di `.env` atau custom)
-* **Validasi ekstensi & MIME type**
-* **Rename otomatis** untuk mencegah bentrok file
-* **Overwrite opsional**
-* Menyimpan file di **storage internal** (`Storage`)
-* Mengembalikan metadata lengkap setelah upload
-* Error handling lengkap
+`Upload` is a **professional file upload engine** for CaracalPHP. It supports:
 
-> Semua file disimpan di folder internal `storage/uploads` secara default atau bisa kustom path melalui config.
+* Single and multiple file uploads
+* File size validation (`UPLOAD_MAX_SIZE` from `.env` or custom)
+* File extension and MIME type validation
+* Automatic file renaming to avoid collisions
+* Optional overwrite of existing files
+* Storing files in **internal storage** (`Storage`)
+* Returning full metadata after upload
+* Complete error handling
+
+> Default storage folder: `storage/uploads`, customizable via configuration.
 
 ---
 
 ## Initialization
 
-```php
+```php id="r8y1nw"
 use Caracal\Core\Upload;
 
-// Inisialisasi default
+// Default initialization
 $upload = new Upload();
 
 // Custom configuration
@@ -34,18 +38,18 @@ $upload = new Upload([
 ]);
 ```
 
-> Jika tidak diset, `max_size` default diambil dari `.env` `UPLOAD_MAX_SIZE` (default `5M`).
+> If not set, `max_size` defaults to `.env` `UPLOAD_MAX_SIZE` (default 5M).
 
 ---
 
 ## Single File Upload
 
-```php
+```php id="m4t3kb"
 $file = $_FILES['avatar'];
 
 $result = $upload->save($file, 'users/avatars');
 
-// Contoh hasil metadata:
+// Example result metadata
 print_r($result);
 /*
 [
@@ -64,7 +68,7 @@ print_r($result);
 
 ## Multiple File Upload
 
-```php
+```php id="n9p5vx"
 $files = $_FILES['documents'];
 
 $results = $upload->save($files, 'users/docs');
@@ -76,35 +80,35 @@ foreach ($results as $file) {
 
 ---
 
-## Allowed File Types & Extensions
+## Allowed File Types and Extensions
 
-```php
+```php id="t2v8qr"
 $upload = new Upload([
     'allowed_ext' => ['jpg','png','pdf'],
     'allowed_mime' => ['image/jpeg','image/png','application/pdf']
 ]);
 
-$upload->save($_FILES['file'], 'uploads'); // akan validasi tipe file
+$upload->save($_FILES['file'], 'uploads'); // validates file type
 ```
 
-> Jika file tidak valid → akan melempar **Exception** dengan pesan jelas.
+> Invalid files throw an **Exception** with a clear message.
 
 ---
 
 ## Overwrite File
 
-```php
-$upload->save($_FILES['avatar'], 'users/avatars', true); // akan menimpa file lama
+```php id="w3m1yz"
+$upload->save($_FILES['avatar'], 'users/avatars', true); // overwrite existing file
 ```
 
-* Default: **tidak overwrite** → otomatis rename jika file sudah ada.
-* Opsi `true` → menimpa file lama.
+* Default: **no overwrite** → automatically renames if file exists
+* Pass `true` to overwrite existing file
 
 ---
 
-## Auto Rename
+## Automatic Rename
 
-Jika file sudah ada dan overwrite **false**, nama file akan diubah otomatis:
+If a file exists and overwrite is `false`, the name will automatically change:
 
 ```
 photo.jpg → photo_1.jpg → photo_2.jpg ...
@@ -114,32 +118,32 @@ photo.jpg → photo_1.jpg → photo_2.jpg ...
 
 ## Max Upload Size
 
-* Bisa diatur lewat config saat inisialisasi (`max_size` dalam bytes)
-* Default diambil dari `.env`:
+* Can be set via configuration (`max_size` in bytes)
+* Defaults from `.env`:
 
 ```dotenv
 UPLOAD_MAX_SIZE=5M
 ```
 
-* Konversi otomatis: `5M` → 5 * 1024 * 1024 bytes.
+* Automatically converted: `5M` → 5 * 1024 * 1024 bytes
 
 ---
 
 ## Error Handling
 
-Jika upload gagal, `Upload::save()` akan melempar **Exception** dengan pesan human-readable:
+`Upload::save()` throws **Exceptions** for:
 
-* File terlalu besar
-* Ekstensi tidak diperbolehkan
-* MIME type tidak sesuai
-* Upload partial atau gagal menulis file
-* Folder target tidak tersedia
+* File too large
+* Disallowed extension
+* Disallowed MIME type
+* Partial upload or failed write
+* Target folder missing
 
 ---
 
-## Example: Full Flow
+## Full Example
 
-```php
+```php id="v7r2ts"
 $upload = new \Caracal\Core\Upload([
     'allowed_ext' => ['jpg','png','gif'],
     'allowed_mime' => ['image/jpeg','image/png','image/gif'],
@@ -158,9 +162,9 @@ try {
 ## Notes
 
 * Default storage path: `storage/uploads`
-* Bisa diganti path custom untuk **modul/plugin internal**
-* Mendukung **single & multiple upload**
-* Metadata lengkap dikembalikan untuk semua file
-* Validasi aman dengan size, extension, dan MIME type
-* Auto rename untuk menghindari konflik file
-* Exception handling untuk setiap error upload
+* Custom path allowed for **module/plugin internal storage**
+* Supports single and multiple uploads
+* Returns full metadata for each file
+* Validates file size, extension, and MIME type
+* Auto-renames files to prevent conflicts
+* Exception handling for all upload errors

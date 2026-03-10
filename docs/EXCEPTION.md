@@ -1,6 +1,6 @@
-# 📘 CaracalPHP – Exception System Documentation
+# CaracalPHP – Exception Documentation
 
-File ini mendefinisikan custom exception untuk framework:
+This file defines the custom exception classes used by the framework.
 
 ```php
 Caracal\Core\CaracalException
@@ -9,7 +9,7 @@ Caracal\Core\ValidationException
 Caracal\Core\CSRFException
 ```
 
-Semua exception turunan berasal dari:
+All exceptions extend the base class
 
 ```php
 Caracal\Core\CaracalException
@@ -17,18 +17,18 @@ Caracal\Core\CaracalException
 
 ---
 
-# 1️⃣ CaracalException
+## CaracalException
 
-Class utama:
+Primary exception class
 
 ```php
 class CaracalException extends \Exception
 ```
 
-Fitur tambahan dibanding Exception biasa:
+Additional features compared to the default PHP `Exception`.
 
-* Mendukung `context` (array data tambahan)
-* Memiliki method `toArray()`
+Supports a `context` array for additional error data
+Provides a `toArray()` method
 
 ---
 
@@ -43,16 +43,16 @@ public function __construct(
 )
 ```
 
-Parameter tambahan dibanding Exception standar:
+Additional parameters compared to the standard exception.
 
-| Parameter   | Fungsi                          |
-| ----------- | ------------------------------- |
-| `$context`  | Data tambahan terkait error     |
-| `$previous` | Exception sebelumnya (chaining) |
+| Parameter   | Description                          |
+| ----------- | ------------------------------------ |
+| `$context`  | Additional data related to the error |
+| `$previous` | Previous exception for chaining      |
 
 ---
 
-## Contoh Penggunaan
+## Example Usage
 
 ```php
 use Caracal\Core\CaracalException;
@@ -66,15 +66,15 @@ throw new CaracalException(
 
 ---
 
-# 2️⃣ Mengambil Context
+## Retrieving Context
 
-Gunakan:
+Use the following method.
 
 ```php
 $e->getContext();
 ```
 
-Contoh:
+Example
 
 ```php
 try {
@@ -86,15 +86,15 @@ try {
 
 ---
 
-# 3️⃣ Konversi ke Array
+## Converting to an Array
 
-Method:
+Method
 
 ```php
 $e->toArray();
 ```
 
-Return:
+Return structure
 
 ```php
 [
@@ -107,7 +107,7 @@ Return:
 ]
 ```
 
-Contoh:
+Example
 
 ```php
 try {
@@ -117,29 +117,29 @@ try {
 }
 ```
 
-Cocok untuk:
+This format is useful for
 
-* JSON API response
-* Logging
-* Debugging
+JSON API responses
+Application logging
+Debugging output
 
 ---
 
-# 4️⃣ Exception Turunan
+## Derived Exceptions
 
-## 🔹 NotFoundException
+### NotFoundException
 
 ```php
 class NotFoundException extends CaracalException {}
 ```
 
-Digunakan untuk:
+Used for cases such as
 
-* Route tidak ditemukan
-* Resource tidak ditemukan
-* Data tidak ada
+Routes that cannot be resolved
+Missing resources
+Unavailable data
 
-Contoh:
+Example
 
 ```php
 use Caracal\Core\NotFoundException;
@@ -149,18 +149,18 @@ throw new NotFoundException('User not found');
 
 ---
 
-## 🔹 ValidationException
+### ValidationException
 
 ```php
 class ValidationException extends CaracalException {}
 ```
 
-Digunakan untuk:
+Used when
 
-* Validasi form gagal
-* Input tidak sesuai aturan
+Form validation fails
+Input does not match required rules
 
-Contoh:
+Example
 
 ```php
 use Caracal\Core\ValidationException;
@@ -174,18 +174,18 @@ throw new ValidationException(
 
 ---
 
-## 🔹 CSRFException
+### CSRFException
 
 ```php
 class CSRFException extends CaracalException {}
 ```
 
-Digunakan untuk:
+Used when
 
-* CSRF token tidak valid
-* CSRF token tidak ada
+The CSRF token is invalid
+The CSRF token is missing
 
-Contoh:
+Example
 
 ```php
 use Caracal\Core\CSRFException;
@@ -195,21 +195,21 @@ throw new CSRFException('Invalid CSRF token');
 
 ---
 
-# 📌 Perilaku Penting Sesuai Implementasi
+## Important Behavior
 
-✔ Semua turunan mewarisi `context`
-✔ `toArray()` selalu menyertakan trace sebagai string
-✔ `context` default adalah array kosong
-✔ Tetap kompatibel dengan Throwable
+All derived exceptions inherit the `context` feature
+`toArray()` always includes the stack trace as a string
+The default value of `context` is an empty array
+The class remains fully compatible with `Throwable`
 
 ---
 
-# 📌 Perbedaan Dengan Exception Biasa
+## Difference from Standard Exception
 
-| Fitur       | Exception | CaracalException |
-| ----------- | --------- | ---------------- |
-| Message     | ✔         | ✔                |
-| Code        | ✔         | ✔                |
-| File & Line | ✔         | ✔                |
-| Context     | ✖         | ✔                |
-| toArray()   | ✖         | ✔                |
+| Feature       | Exception | CaracalException |
+| ------------- | --------- | ---------------- |
+| Message       | Yes       | Yes              |
+| Code          | Yes       | Yes              |
+| File and Line | Yes       | Yes              |
+| Context       | No        | Yes              |
+| toArray()     | No        | Yes              |

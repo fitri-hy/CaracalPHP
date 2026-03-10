@@ -1,37 +1,37 @@
-# CaracalPHP – Base Controller Documentation
+# CaracalPHP – Controller Documentation
 
-Class dasar controller:
+Class
 
-```
+```php
 Caracal\Core\Controller
 ```
 
-Semua controller module sebaiknya mewarisi class ini.
+All module controllers should extend this class.
 
-Controller menyediakan akses langsung ke:
+The controller provides direct access to the following components.
 
-* Request
-* View renderer
-* Asset helper
-* Config
-* Cache
+Request
+View renderer
+Asset helper
+Config
+Cache
 
-Controller dirancang agar **controller module tetap sederhana dan bersih**.
+The controller is designed to keep module controllers simple and clean.
 
 ---
 
-# Properti yang Tersedia
+## Available Properties
 
-Saat controller di-extend, properti berikut otomatis tersedia.
+When extending the controller, the following properties are automatically available.
 
-```
+```php
 protected Request $request
 protected View $view
 protected Asset $asset
 protected Application $app
 ```
 
-Properti ini diinisialisasi pada constructor:
+These properties are initialized in the constructor.
 
 ```php
 $this->app     = Application::getInstance();
@@ -42,15 +42,15 @@ $this->asset   = new Asset();
 
 ---
 
-# Menggunakan Controller di Module
+## Using Controllers in Modules
 
-Lokasi controller:
+Controller location
 
 ```
 app/Modules/{ModuleName}/Controllers/
 ```
 
-Contoh controller:
+Example controller
 
 ```php
 namespace App\Modules\Home\Controllers;
@@ -73,23 +73,23 @@ class HomeController extends Controller
 
 ---
 
-# Render View
+## Rendering Views
 
-Method utama untuk menampilkan halaman HTML:
+Primary method used to render HTML pages
 
-```
+```php
 view(string $template, array $data = [], bool $layout = true): string
 ```
 
-Parameter:
+Parameters
 
-| Parameter | Deskripsi                            |
-| --------- | ------------------------------------ |
-| template  | path view relatif dari `app/Modules` |
-| data      | data yang dikirim ke template        |
-| layout    | apakah menggunakan layout global     |
+| Parameter | Description                         |
+| --------- | ----------------------------------- |
+| template  | View path relative to `app/Modules` |
+| data      | Data passed to the template         |
+| layout    | Whether to use the global layout    |
 
-Contoh:
+Example
 
 ```php
 return $this->view(
@@ -100,7 +100,7 @@ return $this->view(
 );
 ```
 
-Tanpa layout:
+Without layout
 
 ```php
 return $this->view(
@@ -112,11 +112,11 @@ return $this->view(
 
 ---
 
-# Asset Helper
+## Asset Helper
 
-Controller otomatis menyisipkan object `$asset` ke dalam view.
+The controller automatically injects the `$asset` object into views.
 
-Di dalam template dapat langsung digunakan:
+It can be used directly in templates.
 
 ```php
 <link rel="stylesheet" href="<?= $asset->url('css/styles.css') ?>">
@@ -125,39 +125,39 @@ Di dalam template dapat langsung digunakan:
 
 ---
 
-# Mengakses Input Request
+## Accessing Request Input
 
-Controller menyediakan helper:
+The controller provides a helper for retrieving request input.
 
-```
+```php
 input(string $key, mixed $default = null)
 ```
 
-Contoh:
+Example
 
 ```php
 $name = $this->input('name');
 ```
 
-Ini membaca input dari:
+This reads input from
 
-* GET
-* POST
-* JSON body
+GET parameters
+POST parameters
+JSON request body
 
-tergantung implementasi `Request`.
+depending on the implementation of `Request`.
 
 ---
 
-# Mengakses Config
+## Accessing Configuration
 
-Config dapat diakses langsung melalui controller.
+Configuration values can be accessed directly from the controller.
 
-```
+```php
 config(string $key, mixed $default = null)
 ```
 
-Contoh:
+Example
 
 ```php
 $debug = $this->config('app.debug');
@@ -165,15 +165,15 @@ $debug = $this->config('app.debug');
 
 ---
 
-# Menggunakan Cache
+## Using Cache
 
-Controller menyediakan akses cache melalui helper:
+The controller provides access to the cache system through a helper method.
 
 ```php
 $cache = $this->cache();
 ```
 
-Contoh penggunaan:
+Example usage
 
 ```php
 $posts = $this->cache()->remember('home.posts', function () {
@@ -181,13 +181,13 @@ $posts = $this->cache()->remember('home.posts', function () {
 });
 ```
 
-Cache driver mengikuti konfigurasi `.env`.
+The cache driver follows the configuration defined in the `.env` file.
 
 ---
 
-# JSON Response
+## JSON Response
 
-Untuk endpoint API gunakan:
+For API endpoints, use the following method.
 
 ```php
 $this->json([
@@ -195,7 +195,7 @@ $this->json([
 ]);
 ```
 
-Contoh controller API:
+Example API controller
 
 ```php
 public function api(): void
@@ -207,39 +207,39 @@ public function api(): void
 }
 ```
 
-Method ini akan:
+This method will
 
-* mengatur HTTP status code
-* mengirim header `Content-Type: application/json`
-* mengencode data ke JSON
+Set the HTTP status code
+Send the `Content-Type: application/json` header
+Encode the data as JSON
 
 ---
 
-# Redirect
+## Redirect
 
-Untuk redirect halaman gunakan:
+To redirect to another page
 
 ```php
 $this->redirect('/dashboard');
 ```
 
-Method ini akan mengirim header:
+This method sends the following header
 
 ```
 Location: /dashboard
 ```
 
-dan menghentikan eksekusi script.
+and stops script execution.
 
 ---
 
-# Ringkasan Method
+## Method Summary
 
-| Method     | Fungsi                            |
-| ---------- | --------------------------------- |
-| view()     | render template HTML              |
-| json()     | response JSON API                 |
-| redirect() | redirect HTTP                     |
-| input()    | mengambil input request           |
-| config()   | membaca konfigurasi               |
-| cache()    | mengakses cache instance aplikasi |
+| Method     | Description                           |
+| ---------- | ------------------------------------- |
+| view()     | Render an HTML template               |
+| json()     | Return a JSON API response            |
+| redirect() | Perform an HTTP redirect              |
+| input()    | Retrieve request input                |
+| config()   | Read configuration values             |
+| cache()    | Access the application cache instance |

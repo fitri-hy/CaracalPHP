@@ -1,14 +1,24 @@
-# 📘 CaracalPHP – ErrorHandler Usage Guide
+# CaracalPHP – Erro rHandler Documentation
 
-## 1️⃣ Menangani Error Global (500)
+Class
 
-Gunakan `ErrorHandler::handle()` untuk menangkap exception di aplikasi:
+```php
+Caracal\Core\ErrorHandler
+```
+
+`ErrorHandler` provides centralized error and exception handling for Caracal applications. It is used to display structured error pages, manage HTTP status codes, and provide debugging information during development.
+
+---
+
+## Handling Global Errors (HTTP 500)
+
+Use `ErrorHandler::handle()` to catch exceptions in the application.
 
 ```php
 use Caracal\Core\ErrorHandler;
 
 try {
-    // Jalankan kode atau controller
+    // Execute controller or application logic
     $controller = new App\Modules\Home\Controllers\HomeController();
     $controller->index();
 } catch (\Throwable $e) {
@@ -16,17 +26,17 @@ try {
 }
 ```
 
-**Hasil:**
+Result
 
-* Menampilkan halaman error HTML dengan detail exception.
-* Jika `app_debug = true`, akan muncul potongan kode sekitar baris error.
-* Status HTTP otomatis `500`.
+Displays an HTML error page containing exception details.
+If `APP_DEBUG=true`, a code snippet around the error line will be shown.
+The HTTP status code is automatically set to **500**.
 
 ---
 
-## 2️⃣ Menambahkan Controller & Method (Optional)
+## Passing Controller and Method Information (Optional)
 
-Jika ingin menampilkan info method controller yang error:
+Controller and method information can be passed to provide additional context.
 
 ```php
 return ErrorHandler::handle(
@@ -36,16 +46,16 @@ return ErrorHandler::handle(
 );
 ```
 
-**Hasil:**
+Result
 
-* Menampilkan note jika method `store()` tidak ada.
-* Tetap menampilkan snippet kode jika debug aktif.
+Displays a note if the method `store()` does not exist.
+Shows the code snippet when debug mode is enabled.
 
 ---
 
-## 3️⃣ Menggunakan Custom 404 Page
+## Using a Custom 404 Page
 
-Gunakan `ErrorHandler::notFound()` saat route tidak ditemukan:
+Use `ErrorHandler::notFound()` when a route cannot be resolved.
 
 ```php
 use Caracal\Core\ErrorHandler;
@@ -53,33 +63,33 @@ use Caracal\Core\ErrorHandler;
 return ErrorHandler::notFound();
 ```
 
-### Path Custom 404
+### Custom 404 View Location
 
-Buat file:
+Create the following file.
 
 ```
 app/Modules/Error/Views/404.view.php
 ```
 
-Contoh isi:
+Example content
 
 ```html
-<h1>404 – Halaman Tidak Ditemukan</h1>
-<p>Maaf, halaman yang Anda cari tidak tersedia.</p>
-<a href="/">Kembali ke Beranda</a>
+<h1>404 – Page Not Found</h1>
+<p>The page you are looking for is not available.</p>
+<a href="/">Back to Homepage</a>
 ```
 
-**Hasil:**
+Result
 
-* Halaman ini akan ditampilkan jika route tidak cocok.
-* Status HTTP otomatis `404`.
-* Jika file tidak ada → fallback ke halaman 404 default.
+This page will be displayed whenever a route is not matched.
+The HTTP status code is automatically set to **404**.
+If the file does not exist, the system falls back to the default 404 page.
 
 ---
 
-## 4️⃣ Cara Integrasi dengan Router
+## Router Integration
 
-Di `Router.php`, panggil:
+Inside the router implementation
 
 ```php
 $response = $router->dispatch($request);
@@ -89,32 +99,32 @@ if ($response->status() === 404) {
 }
 ```
 
-Dengan ini, setiap URL yang tidak terdaftar akan otomatis menampilkan halaman 404.
+With this integration, every unregistered URL will automatically display the 404 page.
 
 ---
 
-## 5️⃣ Debug Mode
+## Debug Mode
 
-Aktifkan di `.env` atau `config.php`:
+Enable debug mode in the environment configuration.
 
 ```env
 APP_DEBUG=true
 ```
 
-**Efek:**
+Behavior
 
-* Menampilkan potongan kode (±5 baris) pada halaman error 500.
-* Highlight baris error dengan warna merah.
-* Tidak memengaruhi 404.
+Displays a code snippet around the error location on the 500 error page.
+Highlights the exact line where the error occurred.
+Does not affect 404 responses.
 
 ---
 
-## 6️⃣ Ringkas Cara Pakai
+## Usage Summary
 
-| Skenario                  | Cara Pakai                                              | Status HTTP |
-| ------------------------- | ------------------------------------------------------- | ----------- |
-| Error / Exception global  | `ErrorHandler::handle($e)`                              | 500         |
-| Error controller & method | `ErrorHandler::handle($e, Controller::class, 'method')` | 500         |
-| Route tidak ditemukan     | `ErrorHandler::notFound()`                              | 404         |
-| Custom 404                | Buat `app/Modules/Error/Views/404.view.php`             | 404         |
-| Debug mode aktif          | `.env -> APP_DEBUG=true`                                | –           |
+| Scenario                   | Usage                                                   | HTTP Status |
+| -------------------------- | ------------------------------------------------------- | ----------- |
+| Global error or exception  | `ErrorHandler::handle($e)`                              | 500         |
+| Controller or method error | `ErrorHandler::handle($e, Controller::class, 'method')` | 500         |
+| Route not found            | `ErrorHandler::notFound()`                              | 404         |
+| Custom 404 page            | Create `app/Modules/Error/Views/404.view.php`           | 404         |
+| Debug mode enabled         | `.env → APP_DEBUG=true`                                 | —           |

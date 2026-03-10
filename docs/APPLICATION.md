@@ -1,40 +1,40 @@
 # CaracalPHP – Application Documentation
 
-Class:
+Class
 
 ```php
 Caracal\Core\Application
 ```
 
-`Application` adalah inti (core container) dari CaracalPHP yang bertanggung jawab untuk melakukan bootstrap framework, memuat konfigurasi, menyediakan service container, menginisialisasi database, memuat plugin, dan menjalankan HTTP kernel.
+`Application` is the core container of CaracalPHP. It is responsible for bootstrapping the framework, loading configuration, providing the service container, initializing the database, loading plugins, and running the HTTP kernel.
 
 ---
 
-## Peran Application
+## Application Role
 
-`Application` berfungsi sebagai pusat sistem framework dengan beberapa tanggung jawab utama:
+`Application` acts as the central system of the framework with several main responsibilities.
 
-* Core service container
-* Bootstrap framework
-* Host untuk plugin system
-* Entry point untuk request lifecycle
-* Global singleton instance
+Core service container
+Framework bootstrap
+Plugin system host
+Entry point for the request lifecycle
+Global singleton instance
 
-Application menjadi objek utama yang digunakan untuk mengakses service seperti config, cache, database, dan plugin manager.
+The application object is the primary interface used to access services such as configuration, cache, database, and the plugin manager.
 
 ---
 
 ## Singleton Instance
 
-Application menggunakan pola Singleton sehingga hanya ada satu instance selama runtime.
+`Application` uses the Singleton pattern so that only one instance exists during runtime.
 
-Method:
+Method
 
 ```php
 public static function getInstance(): self
 ```
 
-Penggunaan:
+Usage
 
 ```php
 use Caracal\Core\Application;
@@ -44,22 +44,22 @@ $app = Application::getInstance();
 
 ---
 
-## Lifecycle Inisialisasi
+## Initialization Lifecycle
 
-Saat `Application` dibuat, constructor menjalankan proses bootstrap berikut:
+When the `Application` instance is created, the constructor performs the following bootstrap process.
 
-1. Menentukan base path project
-2. Mendaftarkan autoloader
-3. Memuat konfigurasi
-4. Mengatur timezone
-5. Mendaftarkan base services
-6. Bootstrap service yang diperlukan
-7. Inisialisasi plugin manager
-8. Memuat plugin dari folder
-9. Menjalankan plugin
-10. Membuat instance Kernel
+Determine the project base path
+Register the autoloader
+Load configuration
+Set the timezone
+Register base services
+Bootstrap required services
+Initialize the plugin manager
+Load plugins from the plugin directory
+Execute plugins
+Create the Kernel instance
 
-Urutan tersebut memastikan semua komponen inti siap sebelum request diproses.
+This sequence ensures that all core components are ready before processing any request.
 
 ---
 
@@ -69,18 +69,18 @@ Urutan tersebut memastikan semua komponen inti siap sebelum request diproses.
 protected function registerCore(): void
 ```
 
-Method ini mendaftarkan autoloader dan namespace utama framework.
+This method registers the autoloader and the main framework namespaces.
 
-Namespace yang digunakan:
+Registered namespaces
 
-| Namespace    | Folder       |
+| Namespace    | Directory    |
 | ------------ | ------------ |
 | Caracal\Core | /core        |
 | App\Modules  | /app/Modules |
 
-Autoloader akan mencari class berdasarkan namespace tersebut.
+The autoloader resolves classes based on these namespaces.
 
-Contoh struktur module:
+Example module structure
 
 ```
 app/
@@ -93,24 +93,26 @@ app/
 
 ## Service Container
 
-Application memiliki container sederhana untuk mengelola dependency dan service.
+The application provides a lightweight container for managing dependencies and services.
 
-Property container:
+Container properties
 
 ```php
 protected array $bindings = [];
 protected array $instances = [];
 ```
 
-Container mendukung tiga operasi utama:
+The container supports three main operations.
 
-* bind
-* singleton
-* make
+bind
+singleton
+make
+
+---
 
 ### bind
 
-Mendaftarkan service baru.
+Registers a service in the container.
 
 ```php
 $app->bind(Service::class, function ($app) {
@@ -118,13 +120,13 @@ $app->bind(Service::class, function ($app) {
 });
 ```
 
-Setiap pemanggilan `make()` akan membuat instance baru.
+Each call to `make()` will create a new instance.
 
 ---
 
 ### singleton
 
-Mendaftarkan service yang hanya dibuat sekali.
+Registers a service that is created only once.
 
 ```php
 $app->singleton(Logger::class, function ($app) {
@@ -132,176 +134,176 @@ $app->singleton(Logger::class, function ($app) {
 });
 ```
 
-Instance akan disimpan di `$instances`.
+The instance is stored in `$instances`.
 
 ---
 
 ### make
 
-Mengambil instance dari container.
+Retrieves a service instance from the container.
 
 ```php
 $service = $app->make(Service::class);
 ```
 
-Jika service belum ada, resolver akan dipanggil.
+If the service has not been instantiated yet, the resolver will be executed.
 
 ---
 
 ## Base Services
 
-Base services didaftarkan di method:
+Base services are registered in the following method.
 
 ```php
 protected function registerBaseServices()
 ```
 
-Service bawaan yang tersedia:
+Available built-in services
 
-| Service | Deskripsi           |
-| ------- | ------------------- |
-| cache   | Instance Cache      |
-| config  | Instance Config     |
-| db      | Database connection |
-| plugins | Plugin manager      |
+| Service | Description            |
+| ------- | ---------------------- |
+| cache   | Cache instance         |
+| config  | Configuration instance |
+| db      | Database connection    |
+| plugins | Plugin manager         |
 
-Service tersebut dapat diakses melalui method helper pada Application.
+These services can be accessed through helper methods provided by the `Application` class.
 
 ---
 
 ## Config Service
 
-Config digunakan untuk mengakses konfigurasi aplikasi.
+The configuration service is used to access application settings.
 
-Method:
+Method
 
 ```php
 $app->config()
 ```
 
-Contoh penggunaan:
+Example
 
 ```php
 $debug = $app->config()->get('app.debug');
 ```
 
-Config membaca konfigurasi dari file dan environment variable.
+The configuration system loads values from configuration files and environment variables.
 
 ---
 
 ## Database Service
 
-Database hanya diinisialisasi jika konfigurasi berikut aktif:
+The database is initialized only if the following configuration is enabled.
 
 ```
 db.enabled = true
 ```
 
-Jika koneksi database gagal, properti `$database` akan berisi `null`.
+If the database connection fails, the `$database` property will contain `null`.
 
-Mengakses database:
+Accessing the database
 
 ```php
 $db = $app->db();
 ```
 
-Return value:
+Return values
 
-| Value             | Kondisi                              |
-| ----------------- | ------------------------------------ |
-| Database instance | koneksi berhasil                     |
-| null              | database disabled atau gagal koneksi |
+| Value             | Condition                              |
+| ----------------- | -------------------------------------- |
+| Database instance | Connection successful                  |
+| null              | Database disabled or connection failed |
 
 ---
 
 ## Cache Service
 
-Cache diakses melalui container dan dibuat secara lazy.
+The cache service is resolved lazily through the container.
 
-Method:
+Method
 
 ```php
 $app->cache()
 ```
 
-Contoh penggunaan:
+Example
 
 ```php
 $app->cache()->set('key', 'value');
 $value = $app->cache()->get('key');
 ```
 
-Cache hanya dibuat saat pertama kali dipanggil.
+The cache instance is created only when it is first requested.
 
 ---
 
 ## Plugin System
 
-Plugin manager disimpan dalam property:
+The plugin manager is stored in the following property.
 
 ```php
 protected Plugin $plugin;
 ```
 
-Plugin dapat diakses melalui:
+It can be accessed through
 
 ```php
 $app->plugins();
 ```
 
-Plugin manager bertanggung jawab untuk memuat dan menjalankan plugin framework.
+The plugin manager is responsible for loading and executing framework plugins.
 
 ---
 
-## Folder Plugin
+## Plugin Directory
 
-Plugin otomatis dimuat dari folder berikut:
+Plugins are automatically loaded from the following directory.
 
 ```
 /plugins
 ```
 
-Semua file dengan ekstensi `.php` akan dimuat:
+All `.php` files in this directory will be loaded.
 
 ```php
 $this->plugin->load($file);
 ```
 
-Setelah dimuat, plugin dijalankan saat proses boot aplikasi.
+After loading, plugins are executed during the application boot process.
 
 ---
 
 ## Boot Process
 
-Method:
+Method
 
 ```php
 protected function boot()
 ```
 
-Boot process memastikan plugin hanya dijalankan sekali selama runtime.
+The boot process ensures that plugins are executed only once during runtime.
 
-Jika aplikasi sudah pernah boot, method ini tidak akan dijalankan lagi.
+If the application has already been booted, the method will not run again.
 
 ---
 
 ## Path Helper
 
-Method:
+Method
 
 ```php
 public function path(string $path = ''): string
 ```
 
-Method ini menghasilkan absolute path berdasarkan root project.
+This method generates an absolute path relative to the project root.
 
-Contoh:
+Example
 
 ```php
 $app->path('plugins');
 ```
 
-Hasil:
+Result
 
 ```
 {projectRoot}/plugins
@@ -311,15 +313,15 @@ Hasil:
 
 ## Base Path
 
-Method:
+Method
 
 ```php
 public function basePath(): string
 ```
 
-Digunakan untuk mengambil root directory dari project.
+Returns the root directory of the project.
 
-Contoh:
+Example
 
 ```php
 $root = $app->basePath();
@@ -327,23 +329,23 @@ $root = $app->basePath();
 
 ---
 
-## Menjalankan Aplikasi
+## Running the Application
 
-Method utama untuk menjalankan framework:
+Main method used to run the framework
 
 ```php
 public function run(): void
 ```
 
-Method ini memanggil kernel:
+This method calls the kernel.
 
 ```php
 $this->kernel->handle();
 ```
 
-Biasanya digunakan pada file entry point seperti `public/index.php`.
+It is typically used in the application entry point such as `public/index.php`.
 
-Contoh:
+Example
 
 ```php
 use Caracal\Core\Application;
@@ -354,23 +356,23 @@ $app->run();
 
 ---
 
-## Properti Utama
+## Core Properties
 
-| Properti   | Deskripsi                   |
+| Property   | Description                 |
 | ---------- | --------------------------- |
-| $config    | Instance Config             |
+| $config    | Configuration instance      |
 | $kernel    | HTTP Kernel                 |
 | $database  | Database connection         |
 | $plugin    | Plugin manager              |
-| $basePath  | Root project                |
+| $basePath  | Project root                |
 | $bindings  | Service container bindings  |
 | $instances | Singleton service instances |
 
 ---
 
-## Service yang Tersedia
+## Available Services
 
-| Service  | Cara Akses        |
+| Service  | Access Method     |
 | -------- | ----------------- |
 | Config   | `$app->config()`  |
 | Database | `$app->db()`      |
@@ -380,9 +382,9 @@ $app->run();
 
 ---
 
-## Contoh Penggunaan
+## Usage Examples
 
-Mengambil konfigurasi:
+Retrieve configuration
 
 ```php
 $app = Application::getInstance();
@@ -390,19 +392,19 @@ $app = Application::getInstance();
 $env = $app->config()->get('app.env');
 ```
 
-Menggunakan cache:
+Use cache
 
 ```php
 $app->cache()->set('user', $data);
 ```
 
-Menggunakan database:
+Use database
 
 ```php
 $db = $app->db();
 ```
 
-Menggunakan service container:
+Register and resolve a service
 
 ```php
 $app->singleton(UserService::class, function ($app) {

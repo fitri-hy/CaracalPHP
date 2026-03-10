@@ -1,35 +1,42 @@
 # CaracalPHP – View Documentation
 
-`Caracal\Core\View` adalah **template rendering engine bawaan CaracalPHP** untuk menampilkan halaman HTML menggunakan **PHP native templates**.
+Class:
 
-View engine ini dirancang agar:
+```php
+Caracal\Core\View
+```
 
-* ringan
-* fleksibel
-* aman
-* cepat melalui caching
+`View` is the **built-in template rendering engine** for CaracalPHP, using **native PHP templates**.
 
-Fitur utama:
+It is designed to be:
 
-* render view berbasis **module**
-* dukungan **global layout**
-* **view caching**
-* **layout caching**
-* **partial view include**
-* **custom layout**
-* **path security protection**
+* Lightweight
+* Flexible
+* Secure
+* Fast (with caching)
 
 ---
 
-# Struktur View
+## Features
 
-Semua view berada dalam folder:
+* Module-based view rendering
+* Global layout support
+* View & layout caching
+* Partial view inclusion
+* Custom layout support
+* Path security protection
+
+---
+
+## View Structure
+
+All views reside in:
 
 ```
 app/Modules
 ```
 
-Contoh struktur module:
+Example:
 
 ```
 app
@@ -39,7 +46,7 @@ app
              └─ welcome.view.php
 ```
 
-Layout global berada di:
+Global layout:
 
 ```
 app/Modules/layout.view.php
@@ -47,11 +54,7 @@ app/Modules/layout.view.php
 
 ---
 
-# Initialization
-
-View biasanya digunakan dari Controller.
-
-Contoh penggunaan manual:
+## Initialization
 
 ```php
 use Caracal\Core\View;
@@ -59,7 +62,7 @@ use Caracal\Core\View;
 $view = new View();
 ```
 
-Biasanya dipanggil melalui Controller:
+Typical usage in a controller:
 
 ```php
 $this->render('Welcome/Views/welcome.view.php');
@@ -67,39 +70,30 @@ $this->render('Welcome/Views/welcome.view.php');
 
 ---
 
-# Render View
-
-Method utama:
+## Rendering a View
 
 ```php
 render(string $template, array $data = [], bool $useLayout = true): string
 ```
 
-Parameter:
+* `template` – relative path from `app/Modules`
+* `data` – variables passed to the template
+* `useLayout` – whether to wrap with the global layout
 
-| Parameter | Deskripsi                            |
-| --------- | ------------------------------------ |
-| template  | path view relatif dari `app/Modules` |
-| data      | data yang dikirim ke template        |
-| useLayout | apakah menggunakan layout            |
-
-Contoh:
+Example:
 
 ```php
 echo $view->render(
     'Welcome/Views/welcome.view.php',
-    [
-        'title' => 'Welcome',
-        'message' => 'Hello Caracal'
-    ]
+    ['title' => 'Welcome', 'message' => 'Hello Caracal']
 );
 ```
 
 ---
 
-# Data di Dalam View
+## Passing Data
 
-Data yang dikirim dari controller otomatis menjadi variabel di template.
+Data passed from the controller becomes variables in the template:
 
 Controller:
 
@@ -110,34 +104,26 @@ $view->render('Welcome/Views/dashboard.view.php', [
 ]);
 ```
 
-Di view:
+View:
 
 ```php
 <h1>Hello <?= $username ?></h1>
 <p>You have <?= $notifications ?> notifications</p>
 ```
 
-View engine menggunakan:
-
-```
-extract($data)
-```
-
-untuk membuat variabel di dalam template.
+> Internally uses `extract($data)`.
 
 ---
 
-# Layout System
+## Layout System
 
-Secara default semua view menggunakan **layout global**.
-
-Lokasi:
+Default layout:
 
 ```
 app/Modules/layout.view.php
 ```
 
-Contoh layout:
+Example layout:
 
 ```php
 <!DOCTYPE html>
@@ -153,19 +139,11 @@ Contoh layout:
 </html>
 ```
 
-Placeholder:
-
-```
-{{content}}
-```
-
-akan digantikan oleh hasil render view.
+`{{content}}` is replaced with the rendered view.
 
 ---
 
-# Render Tanpa Layout
-
-Jika ingin merender view tanpa layout:
+### Render Without Layout
 
 ```php
 $view->render(
@@ -175,216 +153,108 @@ $view->render(
 );
 ```
 
-Parameter `false` akan menonaktifkan layout.
-
-Biasanya digunakan untuk:
-
-* partial template
-* ajax response
-* widget HTML
+*Useful for partial templates, AJAX responses, or widgets.*
 
 ---
 
-# Custom Layout
-
-Layout dapat diganti secara runtime.
-
-Contoh:
+### Custom Layout
 
 ```php
-$view->setLayout(
-    APP_PATH . '/Modules/Admin/layout.view.php'
-);
-```
-
-Mengambil layout aktif:
-
-```php
+$view->setLayout(APP_PATH . '/Modules/Admin/layout.view.php');
 $layout = $view->getLayout();
 ```
 
 ---
 
-# Partial View
+## Partial Views
 
-View dapat memanggil view lain menggunakan method `partial()`.
-
-Contoh di dalam view:
+Include other views inside a view:
 
 ```php
 <?php $this->partial('Welcome/Views/header.view.php'); ?>
-```
 
-Dengan data:
-
-```php
 <?php $this->partial(
     'Blog/Views/post.view.php',
     ['post' => $post]
 ); ?>
 ```
 
-Partial **tidak menggunakan layout** dan langsung dirender.
+*Partial views do not use the layout.*
 
 ---
 
-# View Caching
+## View Caching
 
-Caracal memiliki **built-in caching untuk view**.
-
-Caching aktif jika:
+Activated via `.env`:
 
 ```
 CACHE_ENABLED=true
 ```
 
-di file `.env`.
+* Caches rendered views and layout templates
+* Cache key example: `view_{md5(template + data_keys)}`
+* Layout cache stores **template HTML only**, not rendered content
 
-Caching dilakukan untuk:
+Benefits:
 
-* hasil render view
-* template layout
-
-Cache key view:
-
-```
-view_{hash}
-```
-
-Hash dibuat dari:
-
-```
-md5(template + data_keys)
-```
-
-Contoh:
-
-```
-view_a3f5e8b9c7d2
-```
-
-Layout cache:
-
-```
-layout_template
-```
-
-Layout hanya di-cache sebagai **template HTML**, bukan hasil render, sehingga aman untuk digunakan oleh banyak view.
-
-Manfaat caching:
-
-* mempercepat rendering halaman
-* mengurangi parsing template
-* mengurangi IO file
+* Faster page rendering
+* Reduced template parsing
+* Reduced file I/O
 
 ---
 
-# Cara Kerja Rendering
+## Rendering Process
 
-Urutan proses rendering:
-
-1. cek apakah cache aktif (`cache.enabled`)
-2. cek cache view
-3. render file view
-4. load layout template
-5. ganti `{{content}}` dengan hasil view
-6. simpan hasil render ke cache
-7. return HTML
+1. Check if caching is enabled
+2. Check cache for the view
+3. Render view file
+4. Load layout template
+5. Replace `{{content}}` with rendered view
+6. Save result to cache
+7. Return HTML
 
 ---
 
-# Security
+## Security
 
-View engine memiliki proteksi terhadap **directory traversal attack**.
+* Protects against **directory traversal attacks**
+* Validates paths using `realpath()`
+* Ensures views remain inside `app/Modules`
 
-Path view divalidasi menggunakan:
-
-```
-realpath()
-```
-
-dan dipastikan tetap berada dalam folder:
-
-```
-app/Modules
-```
-
-Sehingga path seperti:
-
-```
-../../../.env
-```
-
-tidak dapat diakses oleh sistem view.
+Invalid paths like `../../../.env` are blocked.
 
 ---
 
-# Error Handling
+## Error Handling
 
-Jika file view tidak ditemukan:
+* File not found → `Exception: View {file} not found`
+* Invalid path → `Exception: Invalid view path`
 
-```
-Exception: View {file} not found
-```
-
-Jika path view tidak valid:
-
-```
-Exception: Invalid view path
-```
-
-Pastikan path template mengikuti struktur:
+Ensure paths follow:
 
 ```
 Module/Views/view.view.php
 ```
 
-Contoh:
-
-```
-Welcome/Views/welcome.view.php
-```
+Example: `Welcome/Views/welcome.view.php`.
 
 ---
 
-# Best Practice
-
-Gunakan view untuk:
-
-* halaman HTML
-* template UI
-* komponen tampilan
-
-Hindari:
-
-* query database di view
-* logika bisnis kompleks
-* manipulasi data besar
-
-Controller bertanggung jawab menyiapkan data sebelum dikirim ke view.
-
----
-
-# Contoh Penggunaan di Controller
+## Controller Example
 
 ```php
 public function index(): string
 {
     return $this->render(
         'Welcome/Views/welcome.view.php',
-        [
-            'title' => 'Welcome',
-            'message' => 'Welcome to Caracal Framework'
-        ]
+        ['title' => 'Welcome', 'message' => 'Welcome to Caracal Framework']
     );
 }
 ```
 
 ---
 
-# Summary
-
-Kemampuan View Engine Caracal:
+## Summary
 
 | Feature             | Supported |
 | ------------------- | --------- |

@@ -1,27 +1,27 @@
-# 📘 CaracalPHP – Kernel Documentation
+# CaracalPHP – Kernel Documentation
 
-Class:
+Class
 
 ```php
 Caracal\Core\Kernel
 ```
 
-Kernel adalah **entry point utama request lifecycle** di CaracalPHP.
+The **Kernel** is the main **request lifecycle entry point** in CaracalPHP.
 
-Ia bertanggung jawab untuk:
+It is responsible for:
 
-* Menjalankan plugin hooks
-* Menangani request
-* Dispatch ke router
-* Menangani error
-* Mengirim response
-* Preload cache sistem
+* Executing plugin hooks
+* Handling incoming requests
+* Dispatching routes
+* Handling errors
+* Sending responses
+* Preloading system cache
 
 ---
 
-# 🎯 Peran Kernel
+# Role of the Kernel
 
-Kernel mengatur alur berikut:
+The Kernel controls the following execution flow.
 
 ```
 before_request
@@ -34,7 +34,7 @@ before_request
 → after_response
 ```
 
-Jika terjadi error:
+If an error occurs:
 
 ```
 on_error
@@ -44,15 +44,15 @@ on_error
 
 ---
 
-# 1️⃣ Constructor
+# Constructor
 
 ```php
 public function __construct(Application $app)
 ```
 
-Kernel membutuhkan instance `Application`.
+The Kernel requires an **Application instance**.
 
-Biasanya dipanggil dari front controller (misalnya `public/index.php`):
+Typically called from the front controller (for example `public/index.php`).
 
 ```php
 $app = new Application();
@@ -62,19 +62,19 @@ $kernel->handle();
 
 ---
 
-# 2️⃣ Method `handle()`
+# `handle()` Method
 
 ```php
 public function handle(): void
 ```
 
-Method ini menjalankan seluruh lifecycle request.
+This method runs the entire **request lifecycle**.
 
 ---
 
-## Urutan Eksekusi Detail
+## Detailed Execution Order
 
-### 1. Ambil Plugin Manager
+### 1. Get Plugin Manager
 
 ```php
 $plugins = $this->app->plugins();
@@ -88,10 +88,10 @@ $plugins = $this->app->plugins();
 $plugins->trigger('before_request');
 ```
 
-Digunakan untuk:
+Used for tasks such as:
 
-* Logging awal
-* Setup environment
+* Early request logging
+* Environment setup
 * Custom boot logic
 
 ---
@@ -104,7 +104,7 @@ $request = Request::capture();
 
 ---
 
-### 4. Inisialisasi Router
+### 4. Initialize Router
 
 ```php
 $router = new Router($this->app);
@@ -118,7 +118,7 @@ $router = new Router($this->app);
 $this->preloadCache($router);
 ```
 
-(Lihat bagian preloadCache di bawah)
+(See the **preloadCache** section below.)
 
 ---
 
@@ -146,9 +146,9 @@ $plugins->trigger('after_dispatch', $response);
 
 ---
 
-### 9. Pastikan Response Instance
+### 9. Ensure Response Instance
 
-Jika controller tidak mengembalikan `Response`:
+If the controller does not return a `Response` object:
 
 ```php
 $response = new Response((string) $response);
@@ -164,35 +164,35 @@ $plugins->trigger('response_ready', $response);
 
 ---
 
-# 3️⃣ Error Handling
+# Error Handling
 
-Jika terjadi exception:
+If an exception occurs:
 
 ```php
 catch (\Throwable $e)
 ```
 
-Urutan:
+Execution flow:
 
 1. Trigger `on_error`
-2. Jalankan:
+2. Execute
 
 ```php
 $response = ErrorHandler::handle($e);
 ```
 
-3. Pastikan instance `Response`
-4. Kirim status 500 jika perlu
+3. Ensure the result is a `Response` instance
+4. Send HTTP **500 status** if necessary
 
 ---
 
-# 4️⃣ Kirim Response
+# Sending the Response
 
 ```php
 $response->send();
 ```
 
-Setelah itu:
+After the response is sent:
 
 ```php
 $plugins->trigger('after_response', $response);
@@ -200,27 +200,27 @@ $plugins->trigger('after_response', $response);
 
 ---
 
-# 5️⃣ preloadCache()
+# `preloadCache()`
 
-Method:
+Method
 
 ```php
 protected function preloadCache(Router $router): void
 ```
 
-Berfungsi untuk menyimpan cache awal jika belum ada.
+This method preloads system cache if it does not already exist.
 
 ---
 
-## Cache yang Dipreload
+## Cached Components
 
-### 1️⃣ Routes
+### Routes
 
 ```php
 $cache->get('routes')
 ```
 
-Jika tidak ada:
+If not available:
 
 ```php
 $routes = $router->loadRoutes();
@@ -229,43 +229,43 @@ $cache->set('routes', $routes);
 
 ---
 
-### 2️⃣ Layout
+### Layout
 
-File dicek di:
+File checked at:
 
 ```
 app/Modules/layout.view.php
 ```
 
-Jika ada → disimpan sebagai string.
+If present → stored as a cached string.
 
 ---
 
-### 3️⃣ Middleware
+### Middleware
 
-Disimpan sebagai array kosong jika belum ada.
-
----
-
-### 4️⃣ Plugins
-
-Disimpan sebagai array kosong jika belum ada.
+Stored as an empty array if not already cached.
 
 ---
 
-### 5️⃣ Events
+### Plugins
 
-Disimpan sebagai array kosong jika belum ada.
+Stored as an empty array if not already cached.
 
 ---
 
-# 📌 Lifecycle Summary
+### Events
 
-| Tahap                    | Trigger         |
-| ------------------------ | --------------- |
-| Awal request             | before_request  |
-| Sebelum dispatch         | before_dispatch |
-| Setelah dispatch         | after_dispatch  |
-| Response siap            | response_ready  |
-| Error terjadi            | on_error        |
-| Setelah response dikirim | after_response  |
+Stored as an empty array if not already cached.
+
+---
+
+# Lifecycle Summary
+
+| Stage               | Trigger         |
+| ------------------- | --------------- |
+| Start of request    | before_request  |
+| Before dispatch     | before_dispatch |
+| After dispatch      | after_dispatch  |
+| Response ready      | response_ready  |
+| Error occurred      | on_error        |
+| After response sent | after_response  |

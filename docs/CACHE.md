@@ -1,25 +1,25 @@
-# CaracalPHP Cache Usage Guide
+# CaracalPHP – Cache Documentation
 
-Class:
+Class
 
 ```php
 Caracal\Core\Cache
 ```
 
-Cache menyediakan sistem penyimpanan sementara untuk meningkatkan performa aplikasi dengan menyimpan data yang sering diakses.
+`Cache` provides a temporary storage system used to improve application performance by storing frequently accessed data.
 
-Cache mendukung dua driver:
+The cache system supports two drivers.
 
-* file
-* redis
+file
+redis
 
-Driver dapat dikonfigurasi melalui environment.
+The driver can be configured through environment variables.
 
 ---
 
-## Konfigurasi
+## Configuration
 
-Pengaturan cache melalui `.env` atau config:
+Cache configuration can be defined in the `.env` file or configuration files.
 
 ```
 CACHE_ENABLED=true
@@ -28,13 +28,13 @@ CACHE_TTL=3600
 CACHE_PREFIX=caracal:
 ```
 
-Jika `CACHE_ENABLED=false`, semua operasi cache akan dilewati.
+If `CACHE_ENABLED=false`, all cache operations are skipped.
 
 ---
 
-## Method Utama
+## Available Methods
 
-Cache menyediakan method berikut:
+The cache system provides the following methods.
 
 ```
 set(string $key, mixed $value, int $ttl = null)
@@ -48,27 +48,27 @@ getDefaultTTL()
 
 ---
 
-## Menyimpan Cache
+## Storing Cache Data
 
 ```
 $cache->set('home.posts', $posts, 600);
 ```
 
-TTL dalam detik.
+TTL is defined in seconds.
 
 ---
 
-## Mengambil Cache
+## Retrieving Cache Data
 
 ```
 $posts = $cache->get('home.posts');
 ```
 
-Jika cache tidak ada, return `null`.
+If the cache does not exist, the method returns `null`.
 
 ---
 
-## Mengecek Cache
+## Checking Cache Existence
 
 ```
 if ($cache->has('home.posts')) {
@@ -79,7 +79,7 @@ if ($cache->has('home.posts')) {
 
 ## remember()
 
-Method ini adalah cara paling efisien menggunakan cache.
+This method is the most efficient way to use caching.
 
 ```
 $posts = $cache->remember('home.posts', function() {
@@ -87,11 +87,11 @@ $posts = $cache->remember('home.posts', function() {
 }, 600);
 ```
 
-Jika cache tersedia, callback tidak akan dijalankan.
+If the cache already exists, the callback will not be executed.
 
 ---
 
-## Menghapus Cache
+## Deleting Cache
 
 ```
 $cache->delete('home.posts');
@@ -99,7 +99,7 @@ $cache->delete('home.posts');
 
 ---
 
-## Menghapus Semua Cache
+## Clearing All Cache
 
 ```
 $cache->clearAll();
@@ -109,13 +109,13 @@ $cache->clearAll();
 
 ## File Cache Storage
 
-Jika menggunakan driver `file`, cache disimpan di:
+If the `file` driver is used, cache files are stored in the following directory.
 
 ```
 storage/cache/
 ```
 
-Format file:
+File format
 
 ```
 {hash}.cache
@@ -125,37 +125,10 @@ Format file:
 
 ## Redis Cache
 
-Jika driver `redis` aktif, cache disimpan di Redis menggunakan:
+If the `redis` driver is enabled, cache is stored in Redis using the following command.
 
 ```
 setex(key, ttl, serialized_value)
 ```
 
-Jika Redis tidak tersedia, sistem otomatis fallback ke file cache.
-
----
-
-## Best Practice
-
-Gunakan pola penamaan key yang konsisten.
-
-Contoh:
-
-```
-module.entity.action
-```
-
-Contoh nyata:
-
-```
-home.posts
-home.sidebar
-user.profile.12
-page.home
-```
-
-Untuk halaman dinamis:
-
-```
-$key = 'page_' . md5($request->getUri());
-```
+If Redis is not available, the system automatically falls back to file cache.

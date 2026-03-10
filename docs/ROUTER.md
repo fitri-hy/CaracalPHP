@@ -2,13 +2,15 @@
 
 ## Route Location
 
+All module routes are located at:
+
 ```
 app/Modules/*/Routes/*.php
 ```
 
 ---
 
-# Basic Route
+Basic Route:
 
 ```php
 return [
@@ -18,9 +20,9 @@ return [
 
 ---
 
-# HTTP Helpers
+HTTP Helpers:
 
-Router sekarang menyediakan helper:
+The router provides convenient helpers for common HTTP methods:
 
 ```php
 $router->get('/users', UserController::class.'@index');
@@ -31,7 +33,7 @@ $router->delete('/users/{id}', UserController::class.'@destroy');
 
 ---
 
-# Multiple Methods
+Multiple Methods:
 
 ```php
 ['GET|POST', '/login', AuthController::class.'@login']
@@ -39,13 +41,13 @@ $router->delete('/users/{id}', UserController::class.'@destroy');
 
 ---
 
-# Route Parameters
+Route Parameters:
 
 ```
 /users/{id}
 ```
 
-Controller:
+Controller example:
 
 ```php
 public function show(int $id)
@@ -53,7 +55,7 @@ public function show(int $id)
 
 ---
 
-# Route Group
+Route Group:
 
 ```php
 $router->group([
@@ -67,27 +69,27 @@ $router->group([
 
 ---
 
-# Middleware
+Middleware:
 
 ```php
 [
- 'GET',
- '/dashboard',
- DashboardController::class.'@index',
- ['middleware' => [AuthMiddleware::class]]
+    'GET',
+    '/dashboard',
+    DashboardController::class.'@index',
+    ['middleware' => [AuthMiddleware::class]]
 ]
 ```
 
 ---
 
-# Named Route
+Named Route:
 
 ```php
 [
- 'GET',
- '/users/{id}',
- UserController::class.'@show',
- ['name' => 'users.show']
+    'GET',
+    '/users/{id}',
+    UserController::class.'@show',
+    ['name' => 'users.show']
 ]
 ```
 
@@ -105,15 +107,13 @@ Result:
 
 ---
 
-# Dependency Injection
+Dependency Injection:
 
-Supported:
+The router supports automatic injection of:
 
-```
-Request
-Service Class
-Route Parameter
-```
+* `Request` objects
+* Service classes
+* Route parameters
 
 Example:
 
@@ -123,43 +123,43 @@ public function show(Request $request, int $id, UserService $service)
 
 ---
 
-# Response Handling
+Response Handling:
 
-Controller boleh return:
+Controllers can return:
 
-### String
+**String:**
 
-```
+```php
 return "OK";
 ```
 
-### Array
+**Array:**
 
+```php
+return ['success' => true];
 ```
-return ['success'=>true];
-```
 
-Auto JSON.
+Automatically converted to JSON.
 
-### Response
+**Response Object:**
 
-```
-return new Response('Done',200);
+```php
+return new Response('Done', 200);
 ```
 
 ---
 
-# Route Cache
+Route Cache:
 
-Route otomatis di-cache.
+Routes are automatically cached.
 
-Cache file:
+Cache file location:
 
 ```
 storage/cache/routes.php
 ```
 
-Untuk clear:
+Clear cache:
 
 ```php
 Application::getInstance()->cache()->clearAll();
@@ -167,7 +167,7 @@ Application::getInstance()->cache()->clearAll();
 
 ---
 
-# Feature Summary
+Feature Summary:
 
 | Feature               | Supported |
 | --------------------- | --------- |

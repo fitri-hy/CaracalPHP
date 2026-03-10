@@ -1,12 +1,12 @@
-# 📘 CaracalPHP – Request Documentation
+# CaracalPHP – Request Documentation
 
 Class:
 
-```php id="8yx2dn"
+```php
 Caracal\Core\Request
 ```
 
-`Request` adalah representasi HTTP request yang membungkus superglobal PHP:
+`Request` represents an HTTP request and wraps the PHP superglobals:
 
 * `$_GET`
 * `$_POST`
@@ -14,43 +14,41 @@ Caracal\Core\Request
 * `$_COOKIE`
 * `$_FILES`
 
-Class ini menyediakan akses terstruktur dan lebih bersih terhadap data request.
+This class provides structured, clean access to request data.
 
 ---
 
-# 🎯 Tujuan Request
+Purpose of the Request class:
 
-* Membungkus superglobal
-* Menyediakan akses method & URI
-* Menyediakan helper input
-* Digunakan oleh Router & Middleware
+* Wrap superglobals
+* Provide access to HTTP method and URI
+* Offer input helper methods
+* Used by Router and Middleware
 
 ---
 
-# 1️⃣ Properti Public
+Public Properties:
 
-```php id="hztq9g"
+```php
 public array $get, $post, $server, $cookies, $files;
 ```
 
-Semua data disalin saat object dibuat.
+All data is copied when the object is created:
 
-Artinya:
-
-* Snapshot request saat capture
-* Tidak membaca superglobal ulang
+* Captures a snapshot of the request at the time of capture
+* Does not read superglobals again
 
 ---
 
-# 2️⃣ Constructor (Private)
+Constructor (private):
 
-```php id="a3nvtk"
+```php
 private function __construct()
 ```
 
-Mengisi properti dari superglobal:
+Initializes properties from superglobals:
 
-```php id="k5i1pn"
+```php
 $this->get     = $_GET;
 $this->post    = $_POST;
 $this->server  = $_SERVER;
@@ -58,152 +56,148 @@ $this->cookies = $_COOKIE;
 $this->files   = $_FILES;
 ```
 
-Karena private → tidak bisa di-instantiate langsung.
+Being private, it cannot be instantiated directly.
 
 ---
 
-# 3️⃣ Method capture()
+Method `capture`:
 
-```php id="p3sz6t"
+```php
 public static function capture(): self
 ```
 
-Digunakan untuk membuat instance Request.
+Creates a new `Request` instance.
 
-Contoh:
+Example:
 
-```php id="74jix3"
+```php
 $request = Request::capture();
 ```
 
-Biasanya dipanggil oleh Kernel:
+Typically called by the Kernel:
 
-```php id="d7y2m0"
+```php
 $request = Request::capture();
 ```
 
 ---
 
-# 4️⃣ Method method()
+Method `method`:
 
-```php id="6k5a1v"
+```php
 public function method(): string
 ```
 
-Mengembalikan HTTP method dalam huruf besar.
+Returns the HTTP method in uppercase.
 
-Contoh:
+Example:
 
-```php id="o7m8tr"
+```php
 $request->method();
 ```
 
-Hasil:
+Output:
 
-```text id="38xfwq"
+```text
 GET
 POST
 PUT
 DELETE
 ```
 
-Jika tidak ada → default `GET`.
+Default is `GET` if not set.
 
 ---
 
-# 5️⃣ Method uri()
+Method `uri`:
 
-```php id="d2s9kv"
+```php
 public function uri(): string
 ```
 
-Mengambil path URI tanpa query string.
+Returns the path URI without the query string.
 
-Contoh:
+Example:
 
-Jika URL:
+If the URL is:
 
-```id="6d8vln"
+```bash
 /users?id=5
 ```
 
-Maka:
+Then:
 
-```php id="q6o8dp"
+```php
 $request->uri();
 ```
 
-Hasil:
+Output:
 
-```id="x1h8rp"
+```bash
 /users
 ```
 
-Menggunakan:
+Implementation uses:
 
-```php id="vm4xk2"
+```php
 parse_url($uri, PHP_URL_PATH);
 ```
 
 ---
 
-# 6️⃣ Method input()
+Method `input`:
 
-```php id="3d2flh"
+```php
 public function input(string $key, mixed $default = null): mixed
 ```
 
-Mengambil nilai dari:
+Fetches a value in the following order:
 
 1. POST
 2. GET
 3. Default value
 
----
+Example:
 
-## Contoh
-
-```php id="3jzshg"
+```php
 $name = $request->input('name');
 ```
 
-Urutan prioritas:
+Priority order:
 
-```php id="smjns0"
+```php
 $_POST['name'] ?? $_GET['name'] ?? $default
 ```
 
----
+With default:
 
-## Dengan Default
-
-```php id="0rthst"
+```php
 $page = $request->input('page', 1);
 ```
 
 ---
 
-# 7️⃣ Method all()
+Method `all`:
 
-```php id="74l2jv"
+```php
 public function all(): array
 ```
 
-Menggabungkan GET dan POST:
+Merges GET and POST:
 
-```php id="d3hxsd"
+```php
 array_merge($this->get, $this->post);
 ```
 
-Catatan:
+Note:
 
-* Jika key sama → POST akan override GET
+* POST values override GET if keys are the same
 
 ---
 
-# 📌 Contoh Penggunaan di Controller
+Example Usage in Controller:
 
-```php id="9k3lzv"
+```php
 public function store(Request $request)
 {
     $data = $request->all();
@@ -217,36 +211,34 @@ public function store(Request $request)
 
 ---
 
-# 📌 Akses File Upload
+Accessing Uploaded Files:
 
-Karena `$files` public:
-
-```php id="72a0lu"
+```php
 $request->files['avatar'];
 ```
 
 ---
 
-# 📌 Akses Cookie
+Accessing Cookies:
 
-```php id="o8j4mq"
+```php
 $request->cookies['session'];
 ```
 
 ---
 
-# ⚠ Perilaku Penting Sesuai Implementasi
+Important Behavior:
 
-✔ Tidak ada sanitasi otomatis
-✔ Tidak ada validation
-✔ Tidak ada JSON body parsing
-✔ Tidak ada PUT/PATCH parsing
-✔ Tidak immutable
-✔ Snapshot sekali saat capture
+* No automatic sanitization
+* No validation
+* No JSON body parsing
+* No PUT/PATCH parsing
+* Not immutable
+* Snapshot taken once at capture
 
 ---
 
-# ⚠ Tidak Mendukung
+Not Supported:
 
 * Raw JSON body (`php://input`)
 * Method spoofing

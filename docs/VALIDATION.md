@@ -1,16 +1,20 @@
-# 📘 CaracalPHP – Validation Documentation
+# CaracalPHP – Validation Documentation
 
-## Overview
+Class:
 
-`Caracal\Core\Validation` adalah **wrapper sederhana** untuk library [Respect\Validation](https://respect-validation.readthedocs.io/) yang digunakan untuk **memvalidasi data input** dengan mudah dan rapi.
+```php
+Caracal\Core\Validation
+```
 
-Fitur utama:
+`Validation` is a **lightweight wrapper** for [Respect\Validation](https://respect-validation.readthedocs.io/) that makes **input data validation** simple and clean.
 
-* Validasi array data dengan **rules per field**
-* Menangkap semua **error messages** dalam format array
-* Integrasi mudah untuk request forms, API input, dan modul CaracalPHP
+It allows you to:
 
-> ⚡ Mempermudah validasi tanpa menulis banyak boilerplate.
+* Validate arrays of data with **rules per field**
+* Collect **all error messages** in an array
+* Easily integrate into forms, API requests, or CaracalPHP modules
+
+> Simplifies validation without writing repetitive boilerplate.
 
 ---
 
@@ -22,7 +26,7 @@ use Caracal\Core\Validation;
 $validator = new Validation();
 ```
 
-Tidak perlu konfigurasi tambahan, cukup instantiate object.
+No additional configuration is needed—just instantiate the object.
 
 ---
 
@@ -30,7 +34,7 @@ Tidak perlu konfigurasi tambahan, cukup instantiate object.
 
 ### Define Rules
 
-Gunakan class `Respect\Validation\Validator` untuk mendefinisikan rules:
+Use `Respect\Validation\Validator` to define rules:
 
 ```php
 use Respect\Validation\Validator as v;
@@ -52,13 +56,13 @@ $data = [
 ];
 
 if ($validator->validate($data, $rules)) {
-    echo "Data valid!";
+    echo "Data is valid!";
 } else {
     print_r($validator->errors());
 }
 ```
 
-Jika validasi gagal, `errors()` akan mengembalikan array:
+If validation fails, `errors()` returns an array:
 
 ```php
 [
@@ -75,7 +79,7 @@ Jika validasi gagal, `errors()` akan mengembalikan array:
 
 ## Handling Optional Fields
 
-Gunakan `v::optional()` untuk fields yang **boleh kosong**:
+Use `v::optional()` for fields that **can be empty**:
 
 ```php
 $rules = [
@@ -83,13 +87,13 @@ $rules = [
 ];
 ```
 
-Jika `phone` kosong, validasi akan dilewati.
+If `phone` is empty, the validation will be skipped.
 
 ---
 
 ## Advanced Example
 
-Validasi form pendaftaran:
+Form validation example:
 
 ```php
 $data = [
@@ -113,15 +117,15 @@ if (!$validator->validate($data, $rules)) {
 }
 ```
 
-> ✅ Semua error dikumpulkan sekaligus, sehingga bisa ditampilkan di form atau dikembalikan ke API.
+> All errors are collected at once, so they can be displayed in a form or returned in an API response.
 
 ---
 
 ## Notes
 
-* `Validation` adalah **lightweight wrapper** – menggunakan Respect\Validation di bawahnya.
-* Error messages otomatis menggunakan **field name capitalized**
-* Cocok untuk **web forms**, **API request**, atau **module input validation**
-* Mendukung semua validator Respect\Validation standar seperti:
+* `Validation` is a **lightweight wrapper** around Respect\Validation
+* Error messages automatically capitalize the field name
+* Suitable for **web forms**, **API requests**, and **module input validation**
+* Supports all standard Respect\Validation validators such as:
 
-  * `v::email()`, `v::intType()`, `v::length()`, `v::alnum()`, `v::phone()`, dll.
+  * `v::email()`, `v::intType()`, `v::length()`, `v::alnum()`, `v::phone()`, etc.

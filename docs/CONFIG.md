@@ -1,38 +1,32 @@
-# CaracalPHP Config Usage Documentation
+# CaracalPHP – Config Documentation
 
-Class konfigurasi:
+Class
 
-```
+```php
 Caracal\Core\Config
 ```
 
-Config bertanggung jawab untuk:
+`Config` is responsible for loading and managing application configuration. It loads environment variables, reads configuration files, provides access using dot notation, supports runtime overrides, and allows configuration caching for production environments.
 
-* memuat `.env`
-* memuat file konfigurasi dari folder `config/`
-* menyediakan akses konfigurasi menggunakan **dot notation**
-* mendukung override runtime
-* menyediakan **config caching**
+Configuration is typically accessed through the application instance.
 
-Config diakses melalui:
-
-```
+```php
 Application::getInstance()->config();
 ```
 
 ---
 
-# Mengambil Konfigurasi
+## Retrieving Configuration Values
 
-Gunakan:
+Use the following method.
 
-```
+```php
 get(string $key, mixed $default = null)
 ```
 
-Contoh:
+Example usage
 
-```
+```php
 $config->get('app.name');
 $config->get('db.host');
 $config->get('mail.host');
@@ -40,15 +34,17 @@ $config->get('mail.host');
 
 ---
 
-# Dot Notation
+## Dot Notation
 
-Key:
+Configuration keys support dot notation.
+
+Example key
 
 ```
 app.name
 ```
 
-akan mengakses:
+This key accesses the following structure internally.
 
 ```
 $config['app']['name']
@@ -56,41 +52,45 @@ $config['app']['name']
 
 ---
 
-# Mengecek Konfigurasi
+## Checking Configuration Keys
 
-```
+To check whether a configuration key exists
+
+```php
 $config->has('app.name');
 ```
 
 ---
 
-# Override Runtime
+## Runtime Override
 
-Sekarang `set()` mendukung dot notation.
+The `set()` method supports dot notation and allows overriding configuration values during runtime.
 
-```
+```php
 $config->set('app.debug', true);
 ```
 
 ---
 
-# Mengambil Environment Variable
+## Retrieving Environment Variables
 
-```
+Environment variables can be accessed using
+
+```php
 $config->env('APP_ENV');
 ```
 
 ---
 
-# Multiple Config Files
+## Multiple Configuration Files
 
-Folder:
+Configuration files are stored in the following directory.
 
 ```
 config/
 ```
 
-Contoh:
+Example structure
 
 ```
 config/
@@ -99,59 +99,62 @@ config/
    cache.php
 ```
 
-Isi file:
+Example file content
 
-```
+```php
 return [
     'debug' => true
 ];
 ```
 
-Akan tersedia sebagai:
+The configuration above can be accessed using
 
-```
+```php
 $config->get('app.debug');
 ```
 
 ---
 
-# Config Cache
+## Configuration Cache
 
-Untuk production, konfigurasi bisa dikompilasi:
+In production environments, configuration can be compiled into a single cache file.
 
-```
+```php
 $config->cache();
 ```
 
-File cache:
+Cache file location
 
 ```
 storage/cache/config.php
 ```
 
-Membersihkan cache:
+To remove the cached configuration
 
-```
+```php
 $config->clearCache();
 ```
 
 ---
 
-# Mengambil Semua Config
+## Retrieving All Configuration
 
-```
+To retrieve the entire configuration array
+
+```php
 $config->all();
 ```
 
 ---
 
-# Ringkasan Method
+## Method Summary
 
-Method | Fungsi
-get() | mengambil config
-set() | override config
-has() | cek key
-env() | ambil environment variable
-cache() | compile config
-clearCache() | hapus cache config
-all() | semua konfigurasi
+| Method       | Description                       |
+| ------------ | --------------------------------- |
+| get()        | Retrieve a configuration value    |
+| set()        | Override a configuration value    |
+| has()        | Check whether a key exists        |
+| env()        | Retrieve an environment variable  |
+| cache()      | Compile configuration cache       |
+| clearCache() | Remove configuration cache        |
+| all()        | Retrieve all configuration values |

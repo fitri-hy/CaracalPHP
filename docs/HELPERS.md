@@ -1,38 +1,38 @@
-# 📘 CaracalPHP – Helpers Documentation
+# CaracalPHP – Helpers Documentation
 
-Class:
+Class
 
 ```php
 Caracal\Core\Helpers
 ```
 
-Class ini berisi utility static method untuk:
+This class contains static utility methods used for:
 
-* Debug cepat (`dd`)
-* Mengambil environment variable (`env`)
-* Membuat URL absolut (`url`)
+* Quick debugging (`dd`)
+* Reading environment variables (`env`)
+* Generating absolute URLs (`url`)
 
-Semua method bersifat **static**, sehingga tidak perlu membuat instance.
+All methods are **static**, so you do not need to create an instance.
 
 ---
 
-# 1️⃣ `dd()` – Dump and Die
+# `dd()` – Dump and Die
 
-Method:
+Method
 
 ```php
 Helpers::dd(mixed $var): void
 ```
 
-Fungsi:
+Purpose
 
-* Menampilkan isi variabel menggunakan `var_dump`
-* Dibungkus dengan `<pre>`
-* Menghentikan eksekusi (`exit`)
+* Displays the variable using `var_dump`
+* Wraps the output in `<pre>` for readability
+* Stops script execution using `exit`
 
 ---
 
-## Contoh
+## Example
 
 ```php
 use Caracal\Core\Helpers;
@@ -40,46 +40,46 @@ use Caracal\Core\Helpers;
 Helpers::dd($user);
 ```
 
-Output:
+Output
 
-* Struktur lengkap variabel
-* Script langsung berhenti
-
----
-
-## Kapan Digunakan?
-
-✔ Debugging saat development
-✔ Mengecek isi array / object
-✔ Investigasi cepat tanpa logger
-
-⚠ Jangan gunakan di production.
+* Full structure of the variable
+* Script execution stops immediately
 
 ---
 
-# 2️⃣ `env()` – Ambil Environment Variable
+## When to Use
 
-Method:
+✔ Debugging during development
+✔ Inspecting arrays or objects
+✔ Quick investigation without a logger
+
+⚠ Do not use in production.
+
+---
+
+# `env()` – Get Environment Variable
+
+Method
 
 ```php
 Helpers::env(string $key, mixed $default = null): mixed
 ```
 
-Fungsi:
+Purpose
 
-* Mengambil value dari `$_ENV`
-* Jika tidak ada → coba `getenv()`
-* Jika tetap tidak ada → kembalikan `$default`
+* Retrieves a value from `$_ENV`
+* If not found, tries `getenv()`
+* If still not found, returns the provided `$default`
 
 ---
 
-## Contoh
+## Example
 
 ```php
 Helpers::env('APP_ENV');
 ```
 
-Dengan default:
+With a default value
 
 ```php
 Helpers::env('APP_DEBUG', false);
@@ -87,105 +87,105 @@ Helpers::env('APP_DEBUG', false);
 
 ---
 
-## Cara Kerja Internal
+## Internal Behavior
 
 ```php
 return $_ENV[$key] ?? getenv($key) ?? $default;
 ```
 
-Artinya:
+Priority order
 
-1. Prioritas `$_ENV`
-2. Fallback ke `getenv()`
-3. Terakhir gunakan default
+1. `$_ENV`
+2. `getenv()`
+3. `$default`
 
 ---
 
-# 3️⃣ `url()` – Generate Absolute URL
+# `url()` – Generate Absolute URL
 
-Method:
+Method
 
 ```php
 Helpers::url(string $path = ''): string
 ```
 
-Fungsi:
+Purpose
 
-* Membuat URL absolut berdasarkan `APP_URL`
-* Menyesuaikan port server
-* Menggabungkan dengan path
-
----
-
-## Cara Kerja Internal
-
-1. Ambil `APP_URL` dari env
-2. Ambil scheme (http/https)
-3. Ambil host
-4. Cek `$_SERVER['SERVER_PORT']`
-5. Tambahkan port jika bukan default
-6. Gabungkan dengan path
+* Generates an absolute URL based on `APP_URL`
+* Automatically adjusts for server port
+* Appends the provided path
 
 ---
 
-## Contoh
+## Internal Process
 
-Jika `.env`:
+1. Read `APP_URL` from environment
+2. Detect scheme (`http` or `https`)
+3. Determine host
+4. Read `$_SERVER['SERVER_PORT']`
+5. Append port if it is not default
+6. Combine with the provided path
+
+---
+
+## Example
+
+If `.env` contains
 
 ```env
 APP_URL=http://localhost
 ```
 
-Dan server berjalan di port 8000:
+And the server runs on port **8000**
 
 ```php
 echo Helpers::url('login');
 ```
 
-Hasil:
+Result
 
-```text
+```
 http://localhost:8000/login
 ```
 
 ---
 
-## Contoh HTTPS
+## HTTPS Example
 
-Jika:
+If `.env` contains
 
 ```env
 APP_URL=https://example.com
 ```
 
-Maka:
+Then
 
 ```php
 Helpers::url('dashboard');
 ```
 
-Hasil:
+Result
 
-```text
+```
 https://example.com/dashboard
 ```
 
 ---
 
-# 📌 Perilaku Penting Sesuai Implementasi
+# Important Behavior
 
-✔ Default `APP_URL` adalah `http://localhost`
-✔ Port otomatis ditambahkan jika bukan 80/443
-✔ Path otomatis dibersihkan dari double slash
-✔ Tidak membaca subfolder dari APP_URL
-✔ Tidak menangani query string otomatis
+✔ Default `APP_URL` is `http://localhost`
+✔ Port is automatically appended if not **80** or **443**
+✔ Double slashes in paths are automatically cleaned
+✔ Does not parse subfolders from `APP_URL`
+✔ Does not automatically handle query strings
 
 ---
 
-# 📌 Ringkasan Method
+# Method Summary
 
-| Method | Fungsi                     |
-| ------ | -------------------------- |
-| dd()   | Dump & hentikan eksekusi   |
-| env()  | Ambil environment variable |
-| url()  | Generate absolute URL      |
+| Method | Purpose                          |
+| ------ | -------------------------------- |
+| dd()   | Dump variable and stop execution |
+| env()  | Retrieve environment variables   |
+| url()  | Generate absolute URLs           |

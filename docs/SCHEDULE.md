@@ -1,53 +1,55 @@
-# 📘 CaracalPHP – Scheduler Usage Documentation
+# CaracalPHP – Scheduler Documentation
 
-`Caracal\Core\Scheduler` adalah sistem penjadwalan task berbasis file yang memungkinkan Anda menjalankan perintah secara asynchronous menggunakan cron system.
+Class:
 
-Scheduler dirancang untuk:
+```php
+Caracal\Core\Scheduler
+```
 
-* Ringan
-* Tidak membutuhkan database
-* Tidak membutuhkan Redis
-* Cocok untuk shared hosting
-* Production-ready untuk aplikasi modular
+`Scheduler` is a file-based task scheduling system that allows you to run commands asynchronously using the system cron.
+
+It is designed to be:
+
+* Lightweight
+* Database-free
+* Redis-free
+* Suitable for shared hosting
+* Production-ready for modular applications
 
 ---
 
-# 1. Cara Kerja Scheduler
-
-Scheduler bekerja dengan mekanisme berikut:
+How Scheduler Works:
 
 ```
-1. Task didaftarkan melalui Scheduler::add()
-2. Task disimpan di storage/scheduler/tasks.php
-3. Cron system memanggil scheduler runner
-4. Scheduler mengecek task yang "due"
-5. Task dijalankan sebagai proses terpisah (async)
+1. Task is registered via Scheduler::add()
+2. Task is saved in storage/scheduler/tasks.php
+3. System cron calls the scheduler runner
+4. Scheduler checks for tasks that are "due"
+5. Task is executed as a separate process (async)
 ```
 
 ---
 
-# 2. Lokasi Penyimpanan
+Storage Location:
 
-Scheduler otomatis membuat folder:
+Scheduler automatically creates:
 
 ```text
 storage/scheduler/
 ```
 
-File yang dibuat otomatis:
+Automatically created files:
 
 ```text
 storage/scheduler/tasks.php
 storage/scheduler/scheduler.log
 ```
 
-Anda tidak perlu membuat file ini secara manual.
+No manual creation is required.
 
 ---
 
-# 3. Menambahkan Task
-
-Method:
+Adding a Task:
 
 ```php
 public function add(
@@ -59,7 +61,7 @@ public function add(
 ): void
 ```
 
-Contoh:
+Example:
 
 ```php
 use Caracal\Core\Scheduler;
@@ -75,11 +77,9 @@ $scheduler->add(
 
 ---
 
-# 4. Cron Expression
+Cron Expression Support:
 
-Scheduler mendukung:
-
-### Preset
+### Presets
 
 | Preset  | Cron Equivalent |
 | ------- | --------------- |
@@ -88,7 +88,7 @@ Scheduler mendukung:
 | weekly  | 0 0 * * 0       |
 | monthly | 0 0 1 * *       |
 
-Contoh:
+Example:
 
 ```php
 $scheduler->add('report', 'artisan report.php', 'weekly');
@@ -98,7 +98,7 @@ $scheduler->add('report', 'artisan report.php', 'weekly');
 
 ### Custom Cron Expression
 
-Format standar:
+Standard format:
 
 ```
 * * * * *
@@ -110,7 +110,7 @@ Format standar:
 └───────── Minute (0-59)
 ```
 
-Contoh setiap 5 menit:
+Example every 5 minutes:
 
 ```php
 $scheduler->add(
@@ -122,15 +122,13 @@ $scheduler->add(
 
 ---
 
-# 5. Menjalankan Task yang Due
-
-Method:
+Running Due Tasks:
 
 ```php
 $scheduler->runDue();
 ```
 
-Biasanya dipanggil dari file CLI:
+Typically called from a CLI script:
 
 ```php
 // schedule.php
@@ -145,37 +143,37 @@ $scheduler->runDue();
 
 ---
 
-# 6. Integrasi dengan System Cron (Linux)
+System Cron Integration (Linux):
 
-Tambahkan ke crontab:
+Add to crontab:
 
 ```bash
 * * * * * php /path-to-project/schedule.php
 ```
 
-Scheduler akan berjalan setiap menit dan mengeksekusi task yang sesuai jadwal.
+Scheduler will run every minute and execute tasks that are due.
 
 ---
 
-# 7. Menjalankan Task Secara Manual
+Manual Task Execution:
 
 ```php
 $scheduler->run('cleanup');
 ```
 
-Jika task tidak ditemukan, akan melempar exception.
+Throws an exception if the task is not found.
 
 ---
 
-# 8. Prevent Overlapping
+Prevent Overlapping:
 
-Jika `preventOverlap = true`:
+If `preventOverlap = true`:
 
-* Scheduler membuat file lock
-* Task tidak akan dijalankan jika masih berjalan
-* Mencegah duplicate execution
+* Scheduler creates a lock file
+* Task will not run if already executing
+* Prevents duplicate execution
 
-Contoh:
+Example:
 
 ```php
 $scheduler->add(
@@ -189,9 +187,9 @@ $scheduler->add(
 
 ---
 
-# 9. Enable / Disable Task
+Enable / Disable Task:
 
-Anda bisa menonaktifkan task saat pendaftaran:
+You can disable a task when registering it:
 
 ```php
 $scheduler->add(
@@ -202,19 +200,19 @@ $scheduler->add(
 );
 ```
 
-Task dengan `enabled = false` tidak akan dijalankan.
+Tasks with `enabled = false` will not be executed.
 
 ---
 
-# 10. Logging
+Logging:
 
-Setiap task yang dijalankan akan dicatat di:
+All executed tasks are logged in:
 
 ```text
 storage/scheduler/scheduler.log
 ```
 
-Contoh isi log:
+Example log entry:
 
 ```
 [2026-03-04 00:00:00] Task [cleanup] started.
@@ -222,9 +220,9 @@ Contoh isi log:
 
 ---
 
-# 11. Struktur tasks.php
+Tasks Configuration File (`tasks.php`):
 
-File ini dibuat otomatis dan berisi konfigurasi task:
+Automatically created and contains task configurations:
 
 ```php
 <?php return [
@@ -238,4 +236,4 @@ File ini dibuat otomatis dan berisi konfigurasi task:
 ];
 ```
 
-Anda tidak perlu mengedit file ini secara manual.
+Manual editing of this file is not required.

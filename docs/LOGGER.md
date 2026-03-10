@@ -1,18 +1,18 @@
-# 📘 CaracalPHP – Logger Documentation
+# CaracalPHP – Logger Documentation
 
-Class:
+Class
 
 ```php
 Caracal\Core\Logger
 ```
 
-`Logger` adalah wrapper sederhana untuk Monolog yang digunakan untuk mencatat:
+`Logger` is a simple wrapper around **Monolog** used to record:
 
-* Informasi (info)
-* Error
-* Warning
+* Informational logs (`info`)
+* Errors (`error`)
+* Warnings (`warning`)
 
-Log disimpan ke file di folder:
+Logs are stored in files inside:
 
 ```
 /storage/logs/
@@ -20,31 +20,33 @@ Log disimpan ke file di folder:
 
 ---
 
-# 🎯 Tujuan Logger
+# Purpose of Logger
 
-* Menyediakan logging terstruktur
-* Menyimpan log ke file
-* Mendukung context array
-* Menggunakan Monolog sebagai engine
+The logger provides:
+
+* Structured logging
+* File-based log storage
+* Support for context arrays
+* Monolog as the logging engine
 
 ---
 
-# 1️⃣ Constructor
+# Constructor
 
 ```php
 public function __construct(string $name = 'app', string $file = 'app.log')
 ```
 
-### Parameter
+### Parameters
 
-| Parameter | Default   | Fungsi              |
+| Parameter | Default   | Description         |
 | --------- | --------- | ------------------- |
-| $name     | 'app'     | Nama channel logger |
-| $file     | 'app.log' | Nama file log       |
+| $name     | 'app'     | Logger channel name |
+| $file     | 'app.log' | Log file name       |
 
 ---
 
-## Cara Kerja Internal
+## Internal Behavior
 
 ```php
 $this->logger = new MonoLogger($name);
@@ -52,28 +54,29 @@ $path = __DIR__ . '/../storage/logs/' . $file;
 $this->logger->pushHandler(new StreamHandler($path, MonoLogger::DEBUG));
 ```
 
-Artinya:
+This means:
 
-* Semua level log disimpan (DEBUG ke atas)
-* File otomatis berada di `/storage/logs/`
-* Menggunakan StreamHandler
+* All log levels are stored (**DEBUG and above**)
+* The log file is automatically placed in `/storage/logs/`
+* Logging uses `StreamHandler`
 
 ---
 
-# 2️⃣ Method info()
+# `info()` Method
 
 ```php
 public function info(string $msg, array $context = []): void
 ```
 
-Digunakan untuk mencatat informasi umum.
+Used to record general informational messages.
 
-### Contoh:
+### Example
 
 ```php
 use Caracal\Core\Logger;
 
 $logger = new Logger();
+
 $logger->info('User login success', [
     'user_id' => 10
 ]);
@@ -81,15 +84,15 @@ $logger->info('User login success', [
 
 ---
 
-# 3️⃣ Method error()
+# `error()` Method
 
 ```php
 public function error(string $msg, array $context = []): void
 ```
 
-Digunakan untuk mencatat error.
+Used to record application errors.
 
-### Contoh:
+### Example
 
 ```php
 $logger->error('Database connection failed', [
@@ -99,15 +102,15 @@ $logger->error('Database connection failed', [
 
 ---
 
-# 4️⃣ Method warning()
+# `warning()` Method
 
 ```php
 public function warning(string $msg, array $context = []): void
 ```
 
-Digunakan untuk mencatat peringatan.
+Used to record warning messages.
 
-### Contoh:
+### Example
 
 ```php
 $logger->warning('API response slow', [
@@ -117,15 +120,15 @@ $logger->warning('API response slow', [
 
 ---
 
-# 📌 Lokasi File Log
+# Log File Location
 
-Secara default:
+Default location
 
 ```
 /core/../storage/logs/app.log
 ```
 
-Artinya:
+Which resolves to
 
 ```
 project-root/storage/logs/app.log
@@ -133,10 +136,20 @@ project-root/storage/logs/app.log
 
 ---
 
-# 📌 Format Log (Default Monolog)
+# Default Log Format (Monolog)
 
-Contoh output di file:
+Example entry inside the log file
 
 ```
 [2026-03-04T10:15:32.000000+00:00] app.INFO: User login success {"user_id":10} []
 ```
+
+Structure explanation
+
+| Part      | Meaning                           |
+| --------- | --------------------------------- |
+| Timestamp | Time when the log was recorded    |
+| Channel   | Logger channel name (`app`)       |
+| Level     | Log level (`INFO`, `ERROR`, etc.) |
+| Message   | Main log message                  |
+| Context   | Additional structured data        |

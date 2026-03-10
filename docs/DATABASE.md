@@ -1,47 +1,47 @@
-# 📘 CaracalPHP – Database Documentation
+# CaracalPHP – Database Documentation
 
-Class:
+Class
 
 ```php
 Caracal\Core\Database
 ```
 
-Database menggunakan:
+The database layer uses
 
-```
+```php
 Illuminate\Database\Capsule\Manager
 ```
 
-Artinya CaracalPHP memakai **Eloquent ORM (Illuminate Database)** sebagai engine database.
+This means CaracalPHP uses **Eloquent ORM (Illuminate Database)** as the database engine.
 
 ---
 
-# 🎯 Tujuan Class Database
+## Purpose of the Database Class
 
-Class ini berfungsi untuk:
+The `Database` class is responsible for initializing and managing the database layer.
 
-* Inisialisasi koneksi database
-* Konfigurasi MySQL atau SQLite
-* Boot Eloquent ORM
-* Menyediakan akses global ke Capsule
+Initialize database connections
+Configure MySQL or SQLite drivers
+Boot the Eloquent ORM
+Provide global access to the Capsule manager
 
 ---
 
-# 1️⃣ Konfigurasi Database
+## Database Configuration
 
-Database membaca konfigurasi dari:
+Database settings are loaded from the configuration system.
 
 ```php
 $config->get('db')
 ```
 
-Contoh struktur `config/config.php`:
+Example configuration in `config/config.php`
 
 ```php
 return [
     'db' => [
         'enabled'   => true,
-        'driver'    => 'mysql', // mysql atau sqlite
+        'driver'    => 'mysql',
         'host'      => '127.0.0.1',
         'port'      => 3306,
         'name'      => 'caracal',
@@ -56,63 +56,63 @@ return [
 
 ---
 
-# ⚙ 2️⃣ Cara Kerja Constructor
+## Constructor Behavior
+
+Constructor signature
 
 ```php
 public function __construct(Config $config)
 ```
 
-Langkah yang dilakukan:
+Initialization process
 
-1. Ambil config `db`
-2. Jika `enabled` kosong → tidak konek
-3. Buat instance Capsule
-4. Tambahkan koneksi
-5. Set global
-6. Boot Eloquent
-7. Tandai `$connected = true`
+Retrieve the `db` configuration
+If `enabled` is empty or false, the connection is skipped
+Create a Capsule instance
+Add the database connection
+Set Capsule as the global instance
+Boot the Eloquent ORM
+Mark the connection as active using `$connected = true`
 
-Jika gagal koneksi:
+If the connection fails, the system throws
 
-```
+```text
 RuntimeException: Database connection failed
 ```
 
 ---
 
-# 3️⃣ Driver yang Didukung
+## Supported Drivers
 
-## ✅ MySQL (default)
+### MySQL
 
-Jika driver bukan `sqlite`, maka akan menggunakan MySQL.
+MySQL is the default driver when the configuration driver is not set to `sqlite`.
 
-## ✅ SQLite
+### SQLite
 
-Jika:
+If the configuration is set to
 
 ```php
 'driver' => 'sqlite'
 ```
 
-Maka:
-
-* Database file otomatis dibuat di:
+The SQLite database file is automatically created at
 
 ```
 /database/database.sqlite
 ```
 
-Jika file belum ada, otomatis dibuat dengan `touch()`.
+If the file does not exist, it is automatically created using `touch()`.
 
 ---
 
-# 4️⃣ Mengecek Apakah Database Aktif
+## Checking Database Connection
 
 ```php
 $db->isConnected();
 ```
 
-Return:
+Return value
 
 ```
 true / false
@@ -120,45 +120,45 @@ true / false
 
 ---
 
-# 5️⃣ Mengakses Capsule Instance
+## Accessing the Capsule Instance
 
 ```php
 $db->capsule();
 ```
 
-⚠ Akan melempar exception jika database tidak terkoneksi.
+This method throws an exception if the database connection is not active.
 
 ---
 
-# 6️⃣ Cara Akses Global (Direkomendasikan)
+## Recommended Global Access
 
-Gunakan:
+Use the following static method
 
 ```php
 Database::connection();
 ```
 
-Implementasi:
+Implementation signature
 
 ```php
 public static function connection(): Capsule
 ```
 
-Method ini:
+This method performs the following steps
 
-1. Ambil instance Application
-2. Pastikan database aktif
-3. Return Capsule
+Retrieve the `Application` instance
+Ensure the database connection is enabled and active
+Return the Capsule instance
 
-Jika database disabled:
+If the database is disabled, the following exception is thrown
 
-```
+```text
 RuntimeException: Database disabled. Set DB_ENABLED=true
 ```
 
 ---
 
-# 7️⃣ Contoh Penggunaan Query Builder
+## Example Using Query Builder
 
 ```php
 use Caracal\Core\Database;
@@ -170,7 +170,7 @@ $users = $capsule->table('users')->get();
 
 ---
 
-# 8️⃣ Contoh Insert Data
+## Example Insert Operation
 
 ```php
 Database::connection()
@@ -183,9 +183,9 @@ Database::connection()
 
 ---
 
-# 9️⃣ Contoh Menggunakan Eloquent Model
+## Example Using an Eloquent Model
 
-Karena `bootEloquent()` dipanggil, kamu bisa langsung buat model:
+Because `bootEloquent()` is executed during initialization, Eloquent models can be used directly.
 
 ```php
 use Illuminate\Database\Eloquent\Model;
@@ -196,7 +196,7 @@ class User extends Model
 }
 ```
 
-Lalu gunakan:
+Example usage
 
 ```php
 $users = User::all();
@@ -204,15 +204,15 @@ $users = User::all();
 
 ---
 
-# 🔐 Error Handling
+## Error Handling
 
-Jika koneksi gagal:
+If the database connection fails
 
 ```
 RuntimeException("Database connection failed: ...")
 ```
 
-Jika akses connection saat disabled:
+If the connection is accessed while the database is disabled
 
 ```
 RuntimeException("Database disabled. Set DB_ENABLED=true")
@@ -220,11 +220,11 @@ RuntimeException("Database disabled. Set DB_ENABLED=true")
 
 ---
 
-# 📌 Ringkasan Method
+## Method Summary
 
-| Method        | Fungsi                 |
-| ------------- | ---------------------- |
-| __construct() | Inisialisasi koneksi   |
-| isConnected() | Cek status koneksi     |
-| capsule()     | Ambil instance Capsule |
-| connection()  | Akses global Capsule   |
+| Method        | Description                        |
+| ------------- | ---------------------------------- |
+| __construct() | Initialize the database connection |
+| isConnected() | Check the connection status        |
+| capsule()     | Retrieve the Capsule instance      |
+| connection()  | Provide global access to Capsule   |

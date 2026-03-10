@@ -1,4 +1,4 @@
-# 📘 CaracalPHP – Response Documentation
+# CaracalPHP – Response Documentation
 
 Class:
 
@@ -6,34 +6,34 @@ Class:
 Caracal\Core\Response
 ```
 
-`Response` adalah representasi HTTP response dalam CaracalPHP.
+`Response` represents an HTTP response in CaracalPHP.
 
-Class ini bertanggung jawab untuk:
+This class is responsible for:
 
-* Menyimpan konten response
-* Menentukan HTTP status code
-* Mengatur header
-* Mengirim output ke browser
+* Storing response content
+* Setting HTTP status codes
+* Managing headers
+* Sending output to the browser
 
-Digunakan oleh:
+Used by:
 
-* Controller
+* Controllers
 * Kernel
 * ErrorHandler
 * Middleware
 
 ---
 
-# 🎯 Tujuan Response
+Purpose of the Response class:
 
-* Standarisasi output HTTP
-* Mendukung response HTML
-* Mendukung JSON response
-* Mendukung redirect
+* Standardize HTTP output
+* Support HTML responses
+* Support JSON responses
+* Support redirects
 
 ---
 
-# 1️⃣ Properti Internal
+Internal Properties:
 
 ```php id="s4hl8c"
 protected string $content;
@@ -41,17 +41,15 @@ protected int $status;
 protected array $headers;
 ```
 
-Penjelasan:
-
-| Property | Fungsi            |
-| -------- | ----------------- |
-| $content | Isi body response |
-| $status  | HTTP status code  |
-| $headers | Header tambahan   |
+| Property | Purpose            |
+| -------- | ------------------ |
+| $content | Response body      |
+| $status  | HTTP status code   |
+| $headers | Additional headers |
 
 ---
 
-# 2️⃣ Constructor
+Constructor:
 
 ```php id="y8j2nb"
 public function __construct(
@@ -61,13 +59,13 @@ public function __construct(
 )
 ```
 
-Contoh penggunaan:
+Examples:
 
 ```php id="q7m1sv"
 return new Response('<h1>Hello</h1>', 200);
 ```
 
-Dengan header custom:
+With custom headers:
 
 ```php id="cmg4vr"
 return new Response(
@@ -79,19 +77,19 @@ return new Response(
 
 ---
 
-# 3️⃣ Method send()
+Method `send`:
 
 ```php id="5ztg9a"
 public function send(): void
 ```
 
-Method ini:
+Steps:
 
-1. Mengatur HTTP status
-2. Mengirim semua header
-3. Menampilkan content
+1. Set HTTP status
+2. Send all headers
+3. Output the content
 
-Implementasi:
+Implementation:
 
 ```php id="g2sd7k"
 http_response_code($this->status);
@@ -103,7 +101,7 @@ foreach ($this->headers as $key => $value) {
 echo $this->content;
 ```
 
-Biasanya dipanggil oleh Kernel:
+Typically called by the Kernel:
 
 ```php id="o6j3mw"
 $response->send();
@@ -111,7 +109,7 @@ $response->send();
 
 ---
 
-# 4️⃣ Static Method json()
+Static Method `json`:
 
 ```php id="3f8lqk"
 public static function json(
@@ -121,19 +119,15 @@ public static function json(
 ): self
 ```
 
-Digunakan untuk membuat JSON response dengan mudah.
+Used to easily create a JSON response.
 
----
+Features:
 
-## Fitur
+* Automatically sets `Content-Type: application/json`
+* Pretty prints JSON
+* Unicode characters are not escaped
 
-* Auto set `Content-Type: application/json`
-* Pretty print
-* Unicode tidak di-escape
-
----
-
-## Contoh
+Examples:
 
 ```php id="r3x6vz"
 return Response::json([
@@ -151,9 +145,7 @@ Output:
 }
 ```
 
----
-
-## Dengan Status Custom
+With custom status:
 
 ```php id="mt2q8l"
 return Response::json(
@@ -162,9 +154,7 @@ return Response::json(
 );
 ```
 
----
-
-## Dengan Header Tambahan
+With additional headers:
 
 ```php id="w1k8sr"
 return Response::json(
@@ -176,32 +166,28 @@ return Response::json(
 
 ---
 
-# 5️⃣ Static Method redirect()
+Static Method `redirect`:
 
 ```php id="p6y4nd"
 public static function redirect(string $url, int $status = 302): self
 ```
 
-Digunakan untuk redirect ke URL lain.
+Used to redirect to another URL.
 
----
-
-## Contoh
+Example:
 
 ```php id="j9m2tr"
 return Response::redirect('/login');
 ```
 
-Setara dengan:
+Equivalent HTTP response:
 
 ```http id="u5b8ye"
 HTTP/1.1 302 Found
 Location: /login
 ```
 
----
-
-## Dengan Status 301
+With status 301:
 
 ```php id="l8x2sv"
 return Response::redirect('/new-url', 301);
@@ -209,17 +195,15 @@ return Response::redirect('/new-url', 301);
 
 ---
 
-# 📌 Contoh Penggunaan di Controller
+Usage in Controller:
 
-### HTML Response
+HTML response:
 
 ```php id="c2k9mv"
 return new Response('<h1>Dashboard</h1>');
 ```
 
----
-
-### JSON API
+JSON API response:
 
 ```php id="n4q7zx"
 return Response::json([
@@ -227,9 +211,7 @@ return Response::json([
 ]);
 ```
 
----
-
-### Redirect Setelah Submit
+Redirect after submit:
 
 ```php id="e7d2lk"
 return Response::redirect('/dashboard');

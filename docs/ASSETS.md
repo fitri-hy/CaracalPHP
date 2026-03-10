@@ -1,12 +1,12 @@
-# CaracalPHP – Asset Usage Guide
+# CaracalPHP – Asset Documentation
 
-Class:
+Class
 
 ```php
 Caracal\Core\Asset
 ```
 
-`Asset` digunakan untuk menghasilkan URL asset publik seperti CSS, JavaScript, dan gambar yang berada di dalam folder:
+`Asset` is used to generate public asset URLs such as CSS, JavaScript, and images located in the following directory.
 
 ```
 public/assets/
@@ -14,9 +14,9 @@ public/assets/
 
 ---
 
-## Struktur Asset
+## Asset Structure
 
-Contoh struktur folder:
+Example directory structure
 
 ```
 public/
@@ -29,19 +29,19 @@ public/
        └ logo.png
 ```
 
-Semua file dalam folder ini dapat diakses melalui class `Asset`.
+All files in this directory can be accessed through the `Asset` class.
 
 ---
 
-## Konfigurasi Dasar
+## Basic Configuration
 
-URL asset dibangun dari konfigurasi environment:
+Asset URLs are generated using the environment configuration.
 
 ```
 APP_URL=http://localhost
 ```
 
-Contoh hasil:
+Example result
 
 ```
 http://localhost/assets/css/styles.css
@@ -49,9 +49,9 @@ http://localhost/assets/css/styles.css
 
 ---
 
-## Membuat Instance Asset
+## Creating an Asset Instance
 
-Di controller:
+In a controller
 
 ```php
 use Caracal\Core\Asset;
@@ -61,15 +61,15 @@ $asset = new Asset();
 
 ---
 
-## Menghasilkan URL Asset
+## Generating an Asset URL
 
-Method utama:
+Main method
 
 ```php
 $asset->url('css/styles.css');
 ```
 
-Output:
+Output
 
 ```
 http://localhost/assets/css/styles.css
@@ -77,9 +77,9 @@ http://localhost/assets/css/styles.css
 
 ---
 
-## Menggunakan di Controller
+## Using Assets in a Controller
 
-Contoh controller:
+Example controller
 
 ```php
 class ExampleController extends Controller
@@ -98,7 +98,7 @@ class ExampleController extends Controller
 
 ---
 
-## Menggunakan di View
+## Using Assets in a View
 
 ```php
 <link rel="stylesheet" href="<?= $css ?>">
@@ -107,9 +107,9 @@ class ExampleController extends Controller
 
 ---
 
-## Menggunakan Asset Langsung di View
+## Direct Asset Usage in a View
 
-Jika `$asset` tersedia di view:
+If the `$asset` instance is available in the view
 
 ```php
 <link rel="stylesheet" href="<?= $asset->url('css/styles.css') ?>">
@@ -119,29 +119,29 @@ Jika `$asset` tersedia di view:
 
 ## Cache Busting (Versioning)
 
-Untuk menghindari cache browser, gunakan:
+To avoid browser caching issues
 
 ```php
 $asset->version('css/styles.css');
 ```
 
-Output:
+Output
 
 ```
 /assets/css/styles.css?v=1700001111
 ```
 
-Parameter `v` berasal dari waktu modifikasi file.
+The `v` parameter is generated from the file modification time.
 
 ---
 
-## Helper CSS
+## CSS Helper
 
 ```php
 <?= $asset->css('css/styles.css') ?>
 ```
 
-Output:
+Output
 
 ```html
 <link rel="stylesheet" href="/assets/css/styles.css?v=1700001111">
@@ -149,13 +149,13 @@ Output:
 
 ---
 
-## Helper JavaScript
+## JavaScript Helper
 
 ```php
 <?= $asset->js('js/app.js') ?>
 ```
 
-Output:
+Output
 
 ```html
 <script src="/assets/js/app.js?v=1700001111"></script>
@@ -163,13 +163,13 @@ Output:
 
 ---
 
-## Helper Image
+## Image Helper
 
 ```php
 <?= $asset->image('images/logo.png','Logo') ?>
 ```
 
-Output:
+Output
 
 ```html
 <img src="/assets/images/logo.png?v=1700001111" alt="Logo">
@@ -177,13 +177,13 @@ Output:
 
 ---
 
-## Mengecek Apakah File Ada
+## Checking if a File Exists
 
 ```php
 $asset->exists('css/styles.css');
 ```
 
-Return:
+Return value
 
 ```
 true / false
@@ -191,29 +191,14 @@ true / false
 
 ---
 
-## Mendapatkan Path Fisik Asset
+## Getting the Physical Asset Path
 
 ```php
 $path = $asset->path('css/styles.css');
 ```
 
-Output:
+Output
 
 ```
 /project/public/assets/css/styles.css
 ```
-
----
-
-## Best Practice
-
-Disarankan:
-
-* Simpan semua asset di `public/assets`
-* Gunakan helper `css()` dan `js()` untuk mempermudah view
-* Gunakan `version()` untuk menghindari cache browser
-
-Hindari:
-
-* Hardcode URL `/assets/...`
-* Menyimpan asset di luar folder `public`

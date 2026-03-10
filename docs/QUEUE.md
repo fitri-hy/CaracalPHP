@@ -1,4 +1,4 @@
-# 📘 CaracalPHP – Queue Documentation
+# CaracalPHP – Queue Documentation
 
 Class:
 
@@ -6,33 +6,33 @@ Class:
 Caracal\Core\Queue
 ```
 
-`Queue` adalah sistem job queue sederhana berbasis file yang memungkinkan:
+`Queue` is a simple file-based job queue system that allows you to:
 
-* Menyimpan job ke storage
-* Menjalankan job secara asynchronous
-* Memproses satu job atau semua job
+* Store jobs in persistent storage
+* Run jobs asynchronously
+* Process a single job or all jobs
 
-Queue ini **tidak menggunakan database atau Redis**, melainkan file `.job`.
-
----
-
-# 🎯 Tujuan Queue
-
-* Menjalankan task berat di background
-* Tidak menghambat HTTP request
-* Menyediakan sistem antrian ringan tanpa service eksternal
+This queue **does not use a database or Redis**, but instead relies on `.job` files.
 
 ---
 
-# 1️⃣ Lokasi Penyimpanan
+Purpose of the Queue:
 
-Semua job disimpan di:
+* Run heavy tasks in the background
+* Avoid blocking HTTP requests
+* Provide a lightweight queue system without external services
+
+---
+
+Job Storage Location:
+
+All jobs are stored in:
 
 ```
 /storage/jobs
 ```
 
-Jika folder belum ada, akan otomatis dibuat:
+If the folder does not exist, it is automatically created:
 
 ```php
 mkdir($this->storage, 0755, true);
@@ -40,21 +40,21 @@ mkdir($this->storage, 0755, true);
 
 ---
 
-# 2️⃣ Method push()
+Method `push`:
 
 ```php
 public function push(callable $job, array $data = []): string
 ```
 
-Digunakan untuk memasukkan job ke antrian.
+Used to add a job to the queue.
 
 ---
 
-## Cara Kerja
+How it Works:
 
-1. Generate UUID v4
-2. Buat file `{uuid}.job`
-3. Simpan hasil serialize dari:
+1. Generate a UUID v4
+2. Create a file `{uuid}.job`
+3. Store a serialized array containing:
 
    * Callable
    * Data
@@ -65,13 +65,13 @@ serialize([$job, $data]);
 
 ---
 
-## Return
+Return Value:
 
-Mengembalikan ID job (UUID string).
+* Returns the job ID (UUID string)
 
 ---
 
-## Contoh Penggunaan
+Example:
 
 ```php
 use Caracal\Core\Queue;
@@ -89,71 +89,71 @@ echo "Job ID: " . $jobId;
 
 ---
 
-# 3️⃣ Method process()
+Method `process`:
 
 ```php
 public function process(string $id): bool
 ```
 
-Digunakan untuk memproses satu job berdasarkan ID.
+Used to process a single job by its ID.
 
 ---
 
-## Cara Kerja Internal
+Internal Workflow:
 
-1. Cek apakah file job ada
-2. Unserialize file
+1. Check if the job file exists
+2. Unserialize the file
 3. Generate inline PHP code
-4. Jalankan dengan Symfony Process:
+4. Execute using Symfony Process:
 
 ```php
 new Process([PHP_BINARY, '-r', $phpCode]);
 ```
 
-5. Hapus file job setelah dijalankan
+5. Delete the job file after execution
 
 ---
 
-## Penting
+Important:
 
-Process dijalankan dengan:
+The process runs with:
 
 ```php
 $process->start();
 ```
 
-Artinya:
+Meaning:
 
 * Non-blocking
 * Asynchronous
-* Tidak menunggu selesai
+* Does not wait for completion
 
 ---
 
-## Return
+Return Value:
 
-* `true` → jika job ditemukan dan dijalankan
-* `false` → jika file tidak ada
+* `true` → if the job exists and is executed
+* `false` → if the job file does not exist
 
 ---
 
-# 4️⃣ Method processAll()
+Method `processAll`:
 
 ```php
 public function processAll(): void
 ```
 
-Digunakan untuk memproses semua file `.job` di storage.
+Processes all `.job` files in the storage folder.
 
 ---
 
-## Cara Kerja
+Internal Workflow:
 
 ```php
 foreach (glob('*.job') as $file)
 ```
 
-Kemudian panggil:
+Then call:
 
 ```php
 $this->process($id);
@@ -161,16 +161,16 @@ $this->process($id);
 
 ---
 
-# 📌 Contoh Worker Sederhana
+Example Worker Script:
 
-Misalnya buat file CLI:
+Create a CLI file:
 
 ```php
 $queue = new Queue();
 $queue->processAll();
 ```
 
-Bisa dijalankan via cron:
+Can be executed via cron:
 
 ```
 * * * * * php worker.php
@@ -178,15 +178,15 @@ Bisa dijalankan via cron:
 
 ---
 
-# 📌 Format File Job
+Job File Format:
 
-Isi file `.job` adalah:
+The `.job` file contains:
 
 ```php
 serialize([$job, $data]);
 ```
 
-Contoh isi setelah unserialize:
+Example after unserialize:
 
 ```php
 [

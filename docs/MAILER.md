@@ -1,4 +1,4 @@
-# 📘 CaracalPHP – Mailer: Cara Pakai
+# CaracalPHP – Mailer Documentation
 
 Class:
 
@@ -6,11 +6,11 @@ Class:
 Caracal\Core\Mailer
 ```
 
-Digunakan untuk mengirim email via SMTP berdasarkan konfigurasi di `.env` / Config.
+Used to send emails via SMTP based on the configuration in `.env` or the application config.
 
 ---
 
-## 1️⃣ Membuat Instance
+Creating an instance:
 
 ```php
 use Caracal\Core\Mailer;
@@ -18,44 +18,42 @@ use Caracal\Core\Mailer;
 $mailer = new Mailer();
 ```
 
-Ini otomatis mengambil konfigurasi dari aplikasi (`mail.host`, `mail.user`, `mail.pass`, dll).
+This automatically loads the application configuration (`mail.host`, `mail.user`, `mail.pass`, etc.).
 
 ---
 
-## 2️⃣ Mengirim Email HTML
+Sending an HTML email:
 
 ```php
 $success = $mailer->send(
-    'user@example.com',          // Email tujuan
+    'user@example.com',          // Recipient email
     'Welcome to CaracalPHP',     // Subject
-    '<h1>Hello User</h1><p>Your account is ready.</p>' // Isi email (HTML)
+    '<h1>Hello User</h1><p>Your account is ready.</p>' // Email content (HTML)
 );
 
 if ($success) {
-    echo "Email berhasil dikirim.";
+    echo "Email sent successfully.";
 } else {
-    echo "Email gagal dikirim.";
+    echo "Email failed to send.";
 }
 ```
 
 ---
 
-## 3️⃣ Mengirim Email Plain Text
+Sending a plain text email:
 
 ```php
 $success = $mailer->send(
     'user@example.com',
     'Plain Text Mail',
-    'Ini adalah email text biasa.',
+    'This is a plain text email.',
     false  // false = plain text
 );
 ```
 
 ---
 
-## 4️⃣ Contoh di Controller
-
-Misal di controller:
+Example in a controller:
 
 ```php
 namespace App\Modules\Welcome\Controllers;
@@ -72,10 +70,10 @@ class WelcomeController extends Controller
         $success = $mailer->send(
             'user@example.com',
             'Welcome!',
-            '<h1>Selamat datang!</h1><p>Email ini dikirim dari CaracalPHP.</p>'
+            '<h1>Welcome!</h1><p>This email was sent from CaracalPHP.</p>'
         );
 
-        return $success ? 'Email berhasil dikirim' : 'Email gagal dikirim';
+        return $success ? 'Email sent successfully' : 'Email failed to send';
     }
 }
 ```

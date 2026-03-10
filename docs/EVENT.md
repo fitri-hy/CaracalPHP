@@ -1,43 +1,41 @@
-# 📘 CaracalPHP – Event System Documentation
+# CaracalPHP – Event Documentation
 
-Class:
+Class
 
 ```php
 Caracal\Core\Event
 ```
 
-Event system ini adalah **static event dispatcher sederhana** yang mendukung:
+The event system is a simple static event dispatcher that supports:
 
-* Event listener biasa (`on`)
-* Event listener sekali jalan (`once`)
-* Trigger event
-* Hapus listener (`off`)
-
----
-
-# 🎯 Konsep Dasar
-
-Event bekerja dengan pola:
-
-```
-Register Listener → Trigger Event → Jalankan Callback
-```
-
-Semua method bersifat **static**, sehingga tidak perlu membuat instance.
+Regular event listeners (`on`)
+One-time listeners (`once`)
+Event triggering
+Removing listeners (`off`)
 
 ---
 
-# 1️⃣ Mendaftarkan Event Listener
+## Core Concept
 
-Gunakan:
+The event system follows this pattern.
+
+```
+Register Listener → Trigger Event → Execute Callback
+```
+
+All methods are static, so no instance creation is required.
+
+---
+
+## Registering an Event Listener
+
+Use the following method.
 
 ```php
 Event::on(string $event, callable $callback);
 ```
 
----
-
-## Contoh
+### Example
 
 ```php
 use Caracal\Core\Event;
@@ -47,26 +45,24 @@ Event::on('user.registered', function ($data) {
 });
 ```
 
-Listener ini akan dijalankan setiap kali event dipicu.
+This listener will run every time the event is triggered.
 
 ---
 
-# 2️⃣ Listener Sekali Jalan (Once)
+## One-Time Listener
 
-Gunakan:
+Use the following method.
 
 ```php
 Event::once(string $event, callable $callback);
 ```
 
-Listener ini:
+This listener behaves as follows.
 
-* Hanya dijalankan sekali
-* Setelah dipanggil akan otomatis dihapus
+Executed only once
+Automatically removed after execution
 
----
-
-## Contoh
+### Example
 
 ```php
 Event::once('user.login', function ($data) {
@@ -76,17 +72,15 @@ Event::once('user.login', function ($data) {
 
 ---
 
-# 3️⃣ Menjalankan Event
+## Triggering an Event
 
-Gunakan:
+Use the following method.
 
 ```php
 Event::trigger(string $event, array $data = []): array
 ```
 
----
-
-## Contoh
+### Example
 
 ```php
 $results = Event::trigger('user.registered', [
@@ -94,15 +88,15 @@ $results = Event::trigger('user.registered', [
 ]);
 ```
 
-Return value:
+Return value
 
 ```php
 array
 ```
 
-Berisi hasil return dari setiap callback.
+The returned array contains the results from each callback.
 
-Contoh hasil:
+Example result
 
 ```php
 [
@@ -112,30 +106,28 @@ Contoh hasil:
 
 ---
 
-# 4️⃣ Menghapus Listener
+## Removing Event Listeners
 
-Gunakan:
+Use the following method.
 
 ```php
 Event::off(string $event, ?callable $callback = null);
 ```
 
----
-
-## 🔹 Hapus Semua Listener untuk Event
+### Removing All Listeners for an Event
 
 ```php
 Event::off('user.registered');
 ```
 
-Akan menghapus:
+This removes
 
-* Listener biasa
-* Listener once
+Regular listeners
+One-time listeners
 
 ---
 
-## 🔹 Hapus Listener Tertentu
+### Removing a Specific Listener
 
 ```php
 $callback = function ($data) {
@@ -147,35 +139,35 @@ Event::on('test.event', $callback);
 Event::off('test.event', $callback);
 ```
 
-Hanya callback tersebut yang dihapus.
+Only the specified callback will be removed.
 
 ---
 
-# 5️⃣ Cara Kerja Internal
+## Internal Behavior
 
-Event menyimpan listener dalam dua array static:
+Listeners are stored in two static arrays.
 
 ```php
 protected static array $listeners = [];
 protected static array $onceListeners = [];
 ```
 
-Saat `trigger()` dipanggil:
+When `trigger()` is executed, the following process occurs.
 
-1. Jalankan semua `$listeners`
-2. Jalankan semua `$onceListeners`
-3. Hapus `$onceListeners` untuk event tersebut
-4. Return array hasil callback
+Execute all `$listeners`
+Execute all `$onceListeners`
+Remove `$onceListeners` for that event
+Return the array of callback results
 
 ---
 
-# 6️⃣ Contoh Penggunaan di Aplikasi
+## Example Usage in an Application
 
-## 🔹 Contoh: Setelah User Register
+### Example: After User Registration
 
 ```php
 Event::on('user.registered', function ($data) {
-    // kirim email
+    // send email
 });
 
 Event::trigger('user.registered', [
@@ -185,7 +177,7 @@ Event::trigger('user.registered', [
 
 ---
 
-## 🔹 Contoh: Logging
+### Example: Query Logging
 
 ```php
 Event::on('db.query.executed', function ($data) {
@@ -195,29 +187,29 @@ Event::on('db.query.executed', function ($data) {
 
 ---
 
-# 📌 Perilaku Penting
+## Important Behavior
 
-✔ Listener disimpan secara static (global state)
-✔ Listener menerima satu parameter `$data` (array)
-✔ Return callback dikumpulkan dalam array
-✔ `once()` otomatis dihapus setelah trigger
-✔ `off()` bisa hapus semua atau spesifik callback
-
----
-
-# ⚠ Hal yang Perlu Dipahami
-
-* Listener dibandingkan menggunakan `===`
-* Jika callback berupa closure berbeda instance → tidak dianggap sama
-* Event name bersifat string literal (case-sensitive)
+Listeners are stored in a static global state
+Listeners receive a single `$data` parameter (array)
+Callback return values are collected into an array
+`once()` listeners are automatically removed after execution
+`off()` can remove all listeners or a specific callback
 
 ---
 
-# 📌 Ringkasan Method
+## Important Considerations
 
-| Method    | Fungsi                |
-| --------- | --------------------- |
-| on()      | Daftarkan listener    |
-| once()    | Listener sekali jalan |
-| trigger() | Jalankan event        |
-| off()     | Hapus listener        |
+Listeners are compared using `===`
+Closures with different instances are not considered identical
+Event names are string literals and case-sensitive
+
+---
+
+## Method Summary
+
+| Method    | Description                  |
+| --------- | ---------------------------- |
+| on()      | Register an event listener   |
+| once()    | Register a one-time listener |
+| trigger() | Execute an event             |
+| off()     | Remove a listener            |
