@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="<?= $asset->url('css/styles.css') ?>">
 	
 	<script src="https://cdn.tailwindcss.com"></script>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
 </head>
 <body class="overflow-x-hidden">
 	<main>
