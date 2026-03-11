@@ -827,5 +827,92 @@ PHP
         }
     }
 });
+/*
+|--------------------------------------------------------------------------
+| MAKE PLUGIN
+|--------------------------------------------------------------------------
+*/
+$console->add(new class extends Command {
+
+    protected function configure(): void {
+        $this
+            ->setName('make:plugin')
+            ->setDescription('Create a new Caracal plugin')
+            ->addArgument('name', InputArgument::REQUIRED, 'Plugin name');
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int {
+
+        $name = $input->getArgument('name');
+
+        $pluginDir = __DIR__ . "/plugins";
+        $pluginFile = $pluginDir . "/{$name}.php";
+
+        if (!is_dir($pluginDir)) {
+            mkdir($pluginDir, 0777, true);
+        }
+
+        if (file_exists($pluginFile)) {
+            $output->writeln("<error>Plugin {$name} already exists</error>");
+            return Command::FAILURE;
+        }
+
+        $template = <<<PHP
+<?php
+
+return [
+
+    'name' => '{$name}',
+
+    'priority' => 0,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Register
+    |--------------------------------------------------------------------------
+    | Register services in container
+    */
+    'register' => function(\$app) {
+
+        // \$app->set('service', fn() => new Service());
+
+    },
+
+    /*
+    |--------------------------------------------------------------------------
+    | Boot
+    |--------------------------------------------------------------------------
+    | Run after all plugins registered
+    */
+    'boot' => function(\$app) {
+
+        // Boot logic here
+
+    },
+
+    /*
+    |--------------------------------------------------------------------------
+    | Callback
+    |--------------------------------------------------------------------------
+    | Optional runtime callback
+    */
+    'callback' => function(\$app) {
+
+        // Runtime execution
+
+    }
+
+];
+PHP;
+
+        file_put_contents($pluginFile, $template);
+
+        $output->writeln("<info>Plugin {$name} created successfully</info>");
+        $output->writeln("<comment>{$pluginFile}</comment>");
+
+        return Command::SUCCESS;
+    }
+
+});
 
 $console->run();

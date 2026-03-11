@@ -73,6 +73,7 @@ php caracal make:middleware {module} {MiddlewareName}   # Generate module middle
 php caracal make:service {module} {ServiceName}         # Generate module service
 php caracal make:route {module}                         # Generate module route file (Routes/web.php)
 php caracal make:view {module} {viewName}               # Generate module view (lowercase, e.g. modulename.view.php)
+php caracal make:plugin {pluginName}                    # Generate new plugin
 
 php caracal make:modules --all {module}                 # Generate full module structure automatically
 ```
