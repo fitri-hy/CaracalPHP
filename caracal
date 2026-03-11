@@ -279,7 +279,6 @@ $console->add(new class extends Command {
     {
         $app = Application::getInstance();
 
-        // Buat router manual (tanpa ubah core)
         $router = new \Caracal\Core\Router($app);
 
         $routes = $router->loadRoutes();
@@ -317,6 +316,515 @@ $console->add(new class extends Command {
         $table->render();
 
         return Command::SUCCESS;
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| Helper: Validate Name
+|--------------------------------------------------------------------------
+*/
+function caracalName(string $name): string
+{
+    if (!preg_match('/^[A-Za-z0-9]+$/', $name)) {
+        throw new Exception("Invalid name '{$name}'. Only letters and numbers allowed.");
+    }
+
+    return ucfirst($name);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Helper: Module Path
+|--------------------------------------------------------------------------
+*/
+function modulePath(string $module, string $path = ''): string
+{
+    $base = __DIR__ . "/app/Modules/{$module}";
+    return $path ? "{$base}/{$path}" : $base;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Helper: Write File
+|--------------------------------------------------------------------------
+*/
+function writeFile(string $file, string $content): void
+{
+    $dir = dirname($file);
+
+    if (!is_dir($dir)) {
+        mkdir($dir,0755,true);
+    }
+
+    if (!file_exists($file)) {
+        file_put_contents($file,$content);
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| MAKE CONTROLLER
+|--------------------------------------------------------------------------
+*/
+$console->add(new class extends Command {
+
+    protected function configure(): void {
+        $this->setName('make:controller')
+            ->setDescription('Generate module controller')
+            ->addArgument('module', InputArgument::REQUIRED)
+            ->addArgument('name', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int {
+
+        try {
+
+            $module = caracalName($input->getArgument('module'));
+            $name   = caracalName($input->getArgument('name'));
+
+            $file = modulePath($module,"Controllers/{$name}.php");
+
+            $code = <<<PHP
+<?php
+
+namespace App\Modules\\{$module}\Controllers;
+
+use Caracal\Core\Controller;
+
+class {$name} extends Controller
+{
+    public function index(): string
+    {
+        return \$this->view(
+            '{$module}/Views/'.strtolower('{$name}').'.view.php',
+            ['title' => '{$name}']
+        );
+    }
+}
+PHP;
+
+            writeFile($file,$code);
+
+            $output->writeln("<info>Controller {$name} created</info>");
+            return Command::SUCCESS;
+
+        } catch(Exception $e) {
+
+            $output->writeln("<error>{$e->getMessage()}</error>");
+            return Command::FAILURE;
+
+        }
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| MAKE MODEL
+|--------------------------------------------------------------------------
+*/
+$console->add(new class extends Command {
+
+    protected function configure(): void {
+        $this->setName('make:model')
+            ->setDescription('Generate module model')
+            ->addArgument('module', InputArgument::REQUIRED)
+            ->addArgument('name', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int {
+
+        try {
+
+            $module = caracalName($input->getArgument('module'));
+            $name   = caracalName($input->getArgument('name'));
+
+            $file = modulePath($module,"Models/{$name}.php");
+
+            $code = <<<PHP
+<?php
+
+namespace App\Modules\\{$module}\Models;
+
+use Caracal\Core\ORM;
+
+class {$name} extends ORM
+{
+    protected string \$table = strtolower('{$module}');
+}
+PHP;
+
+            writeFile($file,$code);
+
+            $output->writeln("<info>Model {$name} created</info>");
+            return Command::SUCCESS;
+
+        } catch(Exception $e) {
+
+            $output->writeln("<error>{$e->getMessage()}</error>");
+            return Command::FAILURE;
+
+        }
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| MAKE MIDDLEWARE
+|--------------------------------------------------------------------------
+*/
+$console->add(new class extends Command {
+
+    protected function configure(): void {
+        $this->setName('make:middleware')
+            ->setDescription('Generate module middleware')
+            ->addArgument('module', InputArgument::REQUIRED)
+            ->addArgument('name', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int {
+
+        try {
+
+            $module = caracalName($input->getArgument('module'));
+            $name   = caracalName($input->getArgument('name'));
+
+            $file = modulePath($module,"Middleware/{$name}.php");
+
+            $code = <<<PHP
+<?php
+
+namespace App\Modules\\{$module}\Middleware;
+
+use Caracal\Core\Request;
+use Caracal\Core\Response;
+use Caracal\Core\MiddlewareInterface;
+
+class {$name} implements MiddlewareInterface
+{
+    public function handle(Request \$request, callable \$next): Response
+    {
+        return \$next(\$request);
+    }
+}
+PHP;
+
+            writeFile($file,$code);
+
+            $output->writeln("<info>Middleware {$name} created</info>");
+            return Command::SUCCESS;
+
+        } catch(Exception $e) {
+
+            $output->writeln("<error>{$e->getMessage()}</error>");
+            return Command::FAILURE;
+
+        }
+    }
+});
+/*
+|--------------------------------------------------------------------------
+| MAKE SERVICE
+|--------------------------------------------------------------------------
+*/
+$console->add(new class extends Command {
+
+    protected function configure(): void {
+        $this->setName('make:service')
+            ->setDescription('Generate module service')
+            ->addArgument('module', InputArgument::REQUIRED)
+            ->addArgument('name', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int {
+
+        try {
+
+            $module = caracalName($input->getArgument('module'));
+            $name   = caracalName($input->getArgument('name'));
+
+            $file = modulePath($module,"Services/{$name}.php");
+
+            $code = <<<PHP
+<?php
+
+namespace App\Modules\\{$module}\Services;
+
+class {$name}
+{
+    //
+}
+PHP;
+
+            writeFile($file,$code);
+
+            $output->writeln("<info>Service {$name} created</info>");
+            return Command::SUCCESS;
+
+        } catch(Exception $e) {
+
+            $output->writeln("<error>{$e->getMessage()}</error>");
+            return Command::FAILURE;
+
+        }
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| MAKE VIEW
+|--------------------------------------------------------------------------
+*/
+$console->add(new class extends Command {
+
+    protected function configure(): void {
+        $this->setName('make:view')
+            ->setDescription('Generate module view')
+            ->addArgument('module', InputArgument::REQUIRED)
+            ->addArgument('name', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int {
+
+        try {
+
+            $module = caracalName($input->getArgument('module'));
+            $name   = strtolower($input->getArgument('name'));
+
+            $file = modulePath($module,"Views/{$name}.view.php");
+
+            $code = <<<PHP
+<h1><?= \$title ?></h1>
+
+<p>View {$name} from {$module} module</p>
+PHP;
+
+            writeFile($file,$code);
+
+            $output->writeln("<info>View {$name}.view.php created</info>");
+            return Command::SUCCESS;
+
+        } catch(Exception $e) {
+
+            $output->writeln("<error>{$e->getMessage()}</error>");
+            return Command::FAILURE;
+
+        }
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| MAKE ROUTE
+|--------------------------------------------------------------------------
+*/
+$console->add(new class extends Command {
+
+    protected function configure(): void {
+        $this->setName('make:route')
+            ->setDescription('Generate module route')
+            ->addArgument('module', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int {
+
+        try {
+
+            $module = caracalName($input->getArgument('module'));
+            $path   = strtolower($module);
+
+            $file = modulePath($module,"Routes/web.php");
+
+            $code = <<<PHP
+<?php
+
+use App\Modules\\{$module}\Controllers\\{$module}Controller;
+
+return [
+    ['GET','/{$path}', {$module}Controller::class.'@index']
+];
+PHP;
+
+            writeFile($file,$code);
+
+            $output->writeln("<info>Route web.php created</info>");
+            return Command::SUCCESS;
+
+        } catch(Exception $e) {
+
+            $output->writeln("<error>{$e->getMessage()}</error>");
+            return Command::FAILURE;
+
+        }
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| MAKE ALL MODULES
+|--------------------------------------------------------------------------
+*/
+$console->add(new class extends Command {
+
+    protected function configure(): void {
+        $this->setName('make:modules')
+            ->setDescription('Generate full module structure automatically')
+            ->addOption('all', null, InputOption::VALUE_NONE)
+            ->addArgument('module', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int {
+
+        try {
+
+            if (!$input->getOption('all')) {
+                throw new Exception("Use --all option.");
+            }
+
+            $module = caracalName($input->getArgument('module'));
+            $path   = strtolower($module);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Controller
+            |--------------------------------------------------------------------------
+            */
+
+            writeFile(
+                modulePath($module,"Controllers/{$module}Controller.php"),
+<<<PHP
+<?php
+
+namespace App\Modules\\{$module}\Controllers;
+
+use Caracal\Core\Controller;
+
+class {$module}Controller extends Controller
+{
+    public function index(): string
+    {
+        return \$this->view(
+            '{$module}/Views/{$path}.view.php',
+            ['title' => '{$module}']
+        );
+    }
+}
+PHP
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Model
+            |--------------------------------------------------------------------------
+            */
+
+            writeFile(
+                modulePath($module,"Models/{$module}Model.php"),
+<<<PHP
+<?php
+
+namespace App\Modules\\{$module}\Models;
+
+use Caracal\Core\ORM;
+
+class {$module}Model extends ORM
+{
+    protected string \$table = '{$path}';
+}
+PHP
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Middleware
+            |--------------------------------------------------------------------------
+            */
+
+            writeFile(
+                modulePath($module,"Middleware/{$module}Middleware.php"),
+<<<PHP
+<?php
+
+namespace App\Modules\\{$module}\Middleware;
+
+use Caracal\Core\Request;
+use Caracal\Core\Response;
+use Caracal\Core\MiddlewareInterface;
+
+class {$module}Middleware implements MiddlewareInterface
+{
+    public function handle(Request \$request, callable \$next): Response
+    {
+        return \$next(\$request);
+    }
+}
+PHP
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Service
+            |--------------------------------------------------------------------------
+            */
+
+            writeFile(
+                modulePath($module,"Services/{$module}Service.php"),
+<<<PHP
+<?php
+
+namespace App\Modules\\{$module}\Services;
+
+class {$module}Service
+{
+    //
+}
+PHP
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | View
+            |--------------------------------------------------------------------------
+            */
+
+            writeFile(
+                modulePath($module,"Views/{$path}.view.php"),
+<<<PHP
+<h1><?= \$title ?></h1>
+
+<p>Welcome to {$module} module</p>
+PHP
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Route
+            |--------------------------------------------------------------------------
+            */
+
+            writeFile(
+                modulePath($module,"Routes/web.php"),
+<<<PHP
+<?php
+
+use App\Modules\\{$module}\Controllers\\{$module}Controller;
+
+return [
+    ['GET','/{$path}', {$module}Controller::class.'@index']
+];
+PHP
+            );
+
+            $output->writeln("<info>Module {$module} generated successfully</info>");
+
+            return Command::SUCCESS;
+
+        } catch(Exception $e) {
+
+            $output->writeln("<error>{$e->getMessage()}</error>");
+            return Command::FAILURE;
+
+        }
     }
 });
 

@@ -41,20 +41,40 @@ For more usage details, please see [Full Documentation](./docs).
 ## CLI
 
 ```bash
+# Server
 php caracal serve                 # Start server
 php caracal serve --port=9000     # Change port
 php caracal server:ws             # Start WebSocket server (default port 8080)
 php caracal server:ws --port=3000 # Start WebSocket server di port custom
+
+# Application
 php caracal app:run               # Run application lifecycle
+
+# Database
 php caracal migrate               # Run all migrations
+php caracal migrate --seed        # Migrate & seed simultaneously
 php caracal migrate:rollback      # Rollback last migration
 php caracal migrate:fresh         # Reset & migrate fresh
+
 php caracal db:seed               # Run all seeders
 php caracal db:seed UserSeeder    # Run a specific seeder
-php caracal migrate --seed        # Migrate & seed simultaneously
+
+# Cache
 php caracal cache:set --key=foo --value=bar --ttl=3600  # Set cache
 php caracal cache:clear           # Clear cache
+
+# Routes
 php caracal route:list            # Route list
+
+# Generators
+php caracal make:controller {module} {ControllerName}   # Generate module controller
+php caracal make:model {module} {ModelName}             # Generate module model
+php caracal make:middleware {module} {MiddlewareName}   # Generate module middleware
+php caracal make:service {module} {ServiceName}         # Generate module service
+php caracal make:route {module}                         # Generate module route file (Routes/web.php)
+php caracal make:view {module} {viewName}               # Generate module view (lowercase, e.g. modulename.view.php)
+
+php caracal make:modules --all {module}                 # Generate full module structure automatically
 ```
 
 ---

@@ -131,32 +131,55 @@ class Router
         ]);
     }
 
-    protected function dispatcher(): Dispatcher
-    {
-        if ($this->dispatcher) {
-            return $this->dispatcher;
-        }
+	protected function dispatcher(): Dispatcher
+	{
+		if ($this->dispatcher) {
+			return $this->dispatcher;
+		}
 
-        $this->dispatcher = cachedDispatcher(
-            function (RouteCollector $r) {
+		$config = $this->app->config();
+		$cacheEnabled = $config->get('cache.enabled', false);
 
-                foreach ($this->routes as $route) {
+		if (!$cacheEnabled) {
 
-                    foreach ($route['methods'] as $method) {
+			$this->dispatcher = \FastRoute\simpleDispatcher(
+				function (RouteCollector $r) {
 
-                        $r->addRoute($method, $route['path'], $route);
+					foreach ($this->routes as $route) {
 
-                    }
-                }
+						foreach ($route['methods'] as $method) {
 
-            },
-            [
-                'cacheFile' => $this->app->path('storage/cache/routes.php')
-            ]
-        );
+							$r->addRoute($method, $route['path'], $route);
 
-        return $this->dispatcher;
-    }
+						}
+					}
+
+				}
+			);
+
+			return $this->dispatcher;
+		}
+
+		$this->dispatcher = cachedDispatcher(
+			function (RouteCollector $r) {
+
+				foreach ($this->routes as $route) {
+
+					foreach ($route['methods'] as $method) {
+
+						$r->addRoute($method, $route['path'], $route);
+
+					}
+				}
+
+			},
+			[
+				'cacheFile' => $this->app->path('storage/cache/routes.php')
+			]
+		);
+
+		return $this->dispatcher;
+	}
 
     public function dispatch(Request $req): Response
     {
